@@ -1,5 +1,6 @@
 import React from 'react';
 import { Result } from 'antd';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ViewSpec } from '../store';
 import { FormRenderer } from './FormRenderer';
 import { TableRenderer } from './TableRenderer';
@@ -9,7 +10,7 @@ interface Props {
   view: ViewSpec;
 }
 
-export const ViewRenderer: React.FC<Props> = ({ view }) => {
+function renderView(view: ViewSpec): React.ReactNode {
   switch (view.type) {
     case 'form':
       return <FormRenderer view={view} />;
@@ -24,4 +25,19 @@ export const ViewRenderer: React.FC<Props> = ({ view }) => {
     default:
       return <Result status="warning" title="Unknown View Type" subTitle={`No renderer for "${view.type}"`} />;
   }
+}
+
+export const ViewRenderer: React.FC<Props> = ({ view }) => {
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={view.id}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.15 }}
+      >
+        {renderView(view)}
+      </motion.div>
+    </AnimatePresence>
+  );
 };
