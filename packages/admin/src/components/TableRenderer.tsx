@@ -1,9 +1,9 @@
 import React from 'react';
-import { Table, Typography } from 'antd';
+import { Table, Grid } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { ViewSpec } from '../store';
 
-const { Title } = Typography;
+const { useBreakpoint } = Grid;
 
 function formatCell(val: unknown): string {
   if (val === null || val === undefined) return '';
@@ -17,6 +17,7 @@ interface Props {
 
 export const TableRenderer: React.FC<Props> = ({ view }) => {
   const [records] = React.useState<Record<string, unknown>[]>([]);
+  const screens = useBreakpoint();
 
   const columns: ColumnsType<Record<string, unknown>> = view.fields.map((f) => ({
     key: f.name,
@@ -26,16 +27,14 @@ export const TableRenderer: React.FC<Props> = ({ view }) => {
   }));
 
   return (
-    <div>
-      <Title level={3}>{view.title}</Title>
-      <Table
-        columns={columns}
-        dataSource={records}
-        rowKey="id"
-        locale={{ emptyText: 'No records found' }}
-        bordered
-        size="middle"
-      />
-    </div>
+    <Table
+      columns={columns}
+      dataSource={records}
+      rowKey="id"
+      locale={{ emptyText: 'No records found' }}
+      bordered
+      size="middle"
+      scroll={!screens.md ? { x: 'max-content' } : undefined}
+    />
   );
 };
