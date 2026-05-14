@@ -1,0 +1,9 @@
+{
+  "name": "@erp-module/base",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@erp/admin": "workspace:*",
+    "@erp/domain": "workspace:*"
+  }
+}
