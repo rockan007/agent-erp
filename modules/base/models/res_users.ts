@@ -8,7 +8,7 @@ export class ResUsers extends Model {
   @fields.char({ required: true })
   login!: string;
 
-  @fields.char({ encrypt: true })
+  @fields.char({})
   password!: string;
 
   @fields.char({})
