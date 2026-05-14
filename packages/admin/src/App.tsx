@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Drawer, Grid } from 'antd';
-import { SettingOutlined } from '@ant-design/icons';
+
 import { motion } from 'framer-motion';
 import { AppHeader } from './components/AppHeader';
 import { MenuRenderer } from './components/MenuRenderer';
@@ -196,25 +196,6 @@ const App: React.FC = () => {
     />
   );
 
-  /* ── User presence panel (shared between desktop + mobile) ── */
-  const userPresence = (
-    <div className="erp-sider-user">
-      <div className="erp-sider-user-avatar">
-        {(user?.name ?? 'Guest').charAt(0).toUpperCase()}
-      </div>
-      <div className="erp-sider-user-info">
-        <div className="erp-sider-user-name">{user?.name ?? 'Guest'}</div>
-        <div className="erp-sider-user-status">
-          <span className="erp-sider-user-dot" />
-          online
-        </div>
-      </div>
-      <SettingOutlined
-        className="text-xs"
-        style={{ color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}
-      />
-    </div>
-  );
 
   return (
     <Layout className="h-screen">
@@ -224,46 +205,32 @@ const App: React.FC = () => {
         {/* Desktop sidebar */}
         {!isMobile && (
           <Sider
-            width={240}
+            width={220}
             collapsedWidth={64}
             collapsible
             collapsed={siderCollapsed}
             onCollapse={(v) => setSiderCollapsed(v)}
-            theme="dark"
+            theme="light"
             trigger={null}
-            className="erp-sider"
+            className="erp-sider-light"
           >
-            {/* Brand */}
-            <div className="erp-sider-brand flex items-center justify-center h-12">
-              {siderCollapsed ? (
-                <div
-                  className="erp-brand-mark"
-                  style={{ width: 30, height: 30, fontSize: 14 }}
-                >
-                  A
-                </div>
-              ) : (
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="erp-brand-mark"
-                    style={{ width: 24, height: 24, fontSize: 12 }}
-                  >
-                    A
-                  </div>
-                  <span
-                    className="text-white font-bold text-sm tracking-tight"
-                    style={{ fontFamily: "'Syne', sans-serif" }}
-                  >
-                    Agent ERP
-                  </span>
-                </div>
+            {/* Sidebar top: section label + hamburger */}
+            <div className="erp-sider-top">
+              {!siderCollapsed && (
+                <span className="erp-sider-section-label">导航菜单</span>
               )}
+              <button
+                type="button"
+                className="erp-sider-collapse-btn"
+                onClick={() => setSiderCollapsed(!siderCollapsed)}
+              >
+                <span className="erp-hamburger-line" />
+                <span className="erp-hamburger-line" />
+                <span className="erp-hamburger-line" />
+              </button>
             </div>
 
             {sidebarContent}
-
-            {/* User presence */}
-            {!siderCollapsed && userPresence}
           </Sider>
         )}
 
@@ -273,40 +240,29 @@ const App: React.FC = () => {
             open={!siderCollapsed}
             onClose={() => setSiderCollapsed(true)}
             placement="left"
-            width={240}
+            width={220}
             styles={{
-              body: { padding: 0, background: 'transparent' },
+              body: { padding: 0, background: '#fafbfc' },
               wrapper: { background: 'transparent' },
             }}
             closeIcon={null}
           >
-            <div
-              className="erp-sider flex flex-col h-full"
-              style={{
-                background:
-                  'linear-gradient(170deg, var(--color-sidebar-from) 0%, var(--color-sidebar-to) 100%)',
-              }}
-            >
-              <div className="erp-sider-brand flex items-center h-12 px-4">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="erp-brand-mark"
-                    style={{ width: 24, height: 24, fontSize: 12 }}
-                  >
-                    A
-                  </div>
-                  <span
-                    className="text-white font-bold text-sm"
-                    style={{ fontFamily: "'Syne', sans-serif" }}
-                  >
-                    Agent ERP
-                  </span>
-                </div>
+            <div className="erp-sider-light flex flex-col h-full">
+              <div className="erp-sider-top px-3">
+                <span className="erp-sider-section-label">导航菜单</span>
+                <button
+                  type="button"
+                  className="erp-sider-collapse-btn"
+                  onClick={() => setSiderCollapsed(true)}
+                >
+                  <span className="erp-hamburger-line" />
+                  <span className="erp-hamburger-line" />
+                  <span className="erp-hamburger-line" />
+                </button>
               </div>
               <div className="flex-1" style={{ overflow: 'hidden' }}>
                 {sidebarContent}
               </div>
-              {userPresence}
             </div>
           </Drawer>
         )}
@@ -323,9 +279,14 @@ const App: React.FC = () => {
               </div>
             </div>
           ) : (
-            <ErrorBoundary>
-              <WelcomeScreen />
-            </ErrorBoundary>
+            <>
+              <div className="erp-content-breadcrumb">
+                <span className="erp-breadcrumb-home">Home</span>
+              </div>
+              <ErrorBoundary>
+                <WelcomeScreen />
+              </ErrorBoundary>
+            </>
           )}
         </Content>
       </Layout>
