@@ -30,6 +30,18 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@20.19.41)
 
+  modules/base:
+    dependencies:
+      '@erp/admin':
+        specifier: workspace:*
+        version: link:../../packages/admin
+      '@erp/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@erp/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+
   packages/admin:
     dependencies:
       '@erp/core':

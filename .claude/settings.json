@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm --filter *)",
+      "Bash(pnpm test)",
+      "Bash(pnpm run *)",
+      "Bash(pnpm add *)",
+      "Bash(mkdir -p *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status)",
+      "Bash(git diff)",
+      "Glob(*/**/*)",
+      "Grep(*)"
+    ],
+    "ask": [
+      "Bash(pnpm deploy *)",
+      "Bash(git push *)",
+      "Bash(docker *)",
+      "Bash(rm -rf *)"
+    ],
+    "deny": [
+      "Bash(pnpm publish)",
+      "Bash(git push --force)"
+    ]
+  }
+}
