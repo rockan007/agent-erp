@@ -31,7 +31,7 @@ agent-erp/
 │   ├── data/          # Knex wrapper: connection pool, migrations, SQL builder
 │   ├── domain/        # ORM: Model, Field, env, inheritance, computed fields
 │   ├── core/          # Application: ModuleRegistry, Controller, permission middleware, cron
-│   └── admin/         # React Admin Shell: ViewRenderer, Menu, theme
+│   └── admin/         # React Admin Shell: antd Layout/Menu/Form/Table + Tailwind CSS
 ├── modules/
 │   └── base/          # Base module: Partner, Users, Settings (first business module)
 ├── pnpm-workspace.yaml
@@ -46,7 +46,7 @@ agent-erp/
 | Data | SQL generation, connection pool, migration management | packages/data/ |
 | Domain | Model definition, ORM API, fields, inheritance, computed fields | packages/domain/ |
 | Core | Module registration, routing, permission checking, cron scheduler | packages/core/ |
-| Admin | React shell, view renderer, menu tree, dynamic component mapping | packages/admin/ |
+| Admin | React shell, antd Layout/Sider/Content, Menu with icons, Form/Table/Search view renderers, ErrorBoundary | packages/admin/ |
 
 ---
 
@@ -186,15 +186,33 @@ await orders.write({ state: 'confirmed' });
 
 ### 5.1 View Types
 
-| Type | Purpose | React Renderer |
-|------|---------|---------------|
-| `form` | Single record create/edit | FormRenderer |
-| `tree` | Table/list | TableRenderer |
-| `search` | Search filter panel | SearchPanel |
-| `kanban` | Kanban board | KanbanRenderer |
-| `calendar` | Calendar view | CalendarRenderer |
+| Type | Purpose | React Renderer | antd Component |
+|------|---------|---------------|----------------|
+| `form` | Single record create/edit | FormRenderer | `Form` + `Form.Item` + widgets |
+| `tree` | Table/list | TableRenderer | `Table` with `columns` + `dataSource` |
+| `search` | Search filter panel | SearchPanel | `Form` inline + `Input` + `Button` |
+| `kanban` | Kanban board | placeholder | `Result` (coming soon) |
+| `calendar` | Calendar view | placeholder | `Result` (coming soon) |
 
-### 5.2 View Definition Example (TypeScript, not XML)
+### 5.2 UI Framework
+
+The admin shell uses **Ant Design 5** for complex components (Form, Table, Menu, Layout, Select, Input, Button, Result) and **Tailwind CSS 3** for layout spacing, responsive breakpoints, and micro-adjustments.
+
+- **Theme:** `<ConfigProvider theme={{ token: { colorPrimary, borderRadius } }}>` at the app root.
+- **Tailwind:** `@layer` priority ordering (`tailwind-base → antd → components → utilities`) with `corePlugins.preflight: false` to prevent CSS reset conflicts.
+- **Icons:** `@ant-design/icons` for menu and button icons.
+
+### 5.3 Widget Mapping
+
+View field `widget` names dispatch to antd components:
+
+| Widget | antd Component | Notes |
+|--------|---------------|-------|
+| `text` | `<Input>` | readOnly/required via Form.Item rules |
+| `select` | `<Select>` with `options` | choices via `field.options.choices`, runtime type-guarded |
+| `status_bar` | reserved | not yet implemented |
+
+### 5.4 View Definition Example (TypeScript, not XML)
 
 ```typescript
 export const saleOrderForm: FormView = {
@@ -203,7 +221,9 @@ export const saleOrderForm: FormView = {
   title: 'Sales Order',
   fields: [
     { name: 'name', widget: 'text', readonly: true },
-    { name: 'partner_id', widget: 'select', required: true },
+    { name: 'partner_id', widget: 'select', required: true, options: {
+      choices: [['1', 'Acme Corp'], ['2', 'Globex']],
+    }},
     { name: 'state', widget: 'status_bar' },
   ],
   layout: {
@@ -217,7 +237,15 @@ export const saleOrderForm: FormView = {
 };
 ```
 
-### 5.3 View Inheritance
+### 5.5 Layout Mapping
+
+| Layout Type | antd Component |
+|-------------|---------------|
+| `tabs` | `<Tabs>` with `items` per group |
+| `grid` | `<Row>` + `<Col>` + `<Card>` per group |
+| `inline` | `<Card>` per group, stacked vertically |
+
+### 5.6 View Inheritance
 
 ```typescript
 export const extendSaleForm: ViewExtension = {
@@ -226,12 +254,24 @@ export const extendSaleForm: ViewExtension = {
 };
 ```
 
-### 5.4 Render Pipeline
+### 5.7 App Shell
 
 ```
-ViewDefinition → ViewRegistry collect → React ViewRenderer
-→ Parse layout/fields → Map widgets → Render component tree
+<ConfigProvider theme={...}>
+  <Layout className="h-screen">
+    <Sider width={240} theme="light">
+      <Menu mode="inline" items={buildTree(menuItems)} />
+    </Sider>
+    <Content>
+      <ErrorBoundary>
+        <ViewRenderer view={activeView} />
+      </ErrorBoundary>
+    </Content>
+  </Layout>
+</ConfigProvider>
 ```
+
+State managed via Zustand store (`menuItems`, `activeMenuId`, `activeView`, `user`). Menu selection drives view dispatch through `ViewRenderer`, which switches on `view.type`.
 
 ---
 
@@ -318,8 +358,10 @@ HTTP Request
 | Schema | Knex migrations + custom diff | Auto-generate migrations from Models |
 | API | tRPC | End-to-end type safety |
 | State | Zustand | Lightweight, manage ViewRegistry/Menu state |
-| UI | Ant Design / Shadcn UI | Mature table/form/kanban components |
+| UI | Ant Design 5 + Tailwind CSS 3 | Mature table/form/menu components + utility layout |
+| CSS | PostCSS | Tailwind CSS compilation with @layer priority ordering |
 | View Render | Custom ViewRenderer | Reads ViewDefinition → renders components |
+| Icons | @ant-design/icons | Menu and button icons |
 | Testing | Vitest + Playwright | Fast unit tests + E2E coverage |
 | Task Queue | BullMQ + Redis | Cron jobs, async tasks |
 
@@ -329,7 +371,7 @@ HTTP Request
 
 ### Technical Constraints
 - Backend: Node.js 18+ / TypeScript 5+ / Knex / PostgreSQL 15+
-- Frontend: React 18+ / TypeScript / CSS Modules or Tailwind
+- Frontend: React 18+ / TypeScript / Ant Design 5 + Tailwind CSS 3 + PostCSS
 - Package manager: pnpm workspace
 - Testing: Vitest (backend), Playwright (frontend E2E)
 - Style: ESLint + Prettier, `any` type forbidden (strict mode)
@@ -386,3 +428,42 @@ HTTP Request
 | Security | 6 layers: ACL → Field → Record Rules → Encryption → Masking → Audit |
 | Menu | Registry + recursive tree render, auto permission filter |
 | API | tRPC for end-to-end type safety |
+
+---
+
+## 13. E2E Testing
+
+### 13.1 Framework
+
+Playwright with local Chrome channel. Tests inject Zustand state via `window.__STORE__.setState()` — no mock API required for UI validation.
+
+### 13.2 Test Coverage (27 tests)
+
+| Category | Tests | What's Verified |
+|----------|-------|-----------------|
+| Admin Shell | 3 | Layout/Sider/Content render, Welcome message, branding |
+| Header | 3 | Header rendering, collapse toggle, breadcrumb path, user dropdown |
+| Menu | 4 | Menu items render, submenu expand, leaf click sets active, icon-only collapsed mode |
+| Form View | 5 | Title, tabs layout, input rendering, Save button, required field validation |
+| Table View | 3 | Title, column headers, empty state |
+| Search View | 4 | Title, inline fields, Search/Clear buttons, Clear resets fields |
+| Placeholder | 3 | Kanban, Calendar, unknown view type fallback |
+| Responsive | 2 | Sider collapsed on < 992px, drawer mode on < 768px |
+
+### 13.3 Running
+
+```bash
+npx playwright test --config=packages/admin/playwright.config.ts
+```
+
+### 13.4 State Injection Pattern
+
+```typescript
+async function setState(page, state) {
+  await page.evaluate((s) => {
+    (window as any).__STORE__.setState(s);
+  }, state);
+}
+```
+
+The Zustand store is exposed on `window.__STORE__` in `store.ts`, enabling tests to inject menu items, active views, and user state without going through login or API calls.
