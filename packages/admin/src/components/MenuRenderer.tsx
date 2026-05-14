@@ -6,7 +6,6 @@ import {
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
-  FileOutlined,
 } from '@ant-design/icons';
 import { useStore, MenuItem } from '../store';
 
@@ -72,7 +71,11 @@ function toAntdItems(nodes: TreeNode[]): MenuProps['items'] {
   });
 }
 
-export const MenuRenderer: React.FC = () => {
+interface Props {
+  onItemClick?: () => void;
+}
+
+export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
   const menuItems = useStore((s) => s.menuItems);
   const activeMenuId = useStore((s) => s.activeMenuId);
   const setActiveMenu = useStore((s) => s.setActiveMenu);
@@ -81,20 +84,16 @@ export const MenuRenderer: React.FC = () => {
 
   const onClick: MenuProps['onClick'] = ({ key }) => {
     setActiveMenu(key);
+    onItemClick?.();
   };
 
   return (
-    <div>
-      <div className="px-3 py-3 border-b border-gray-200">
-        <span className="text-lg font-bold">Agent ERP</span>
-      </div>
-      <Menu
-        mode="inline"
-        selectedKeys={activeMenuId ? [activeMenuId] : []}
-        items={antdItems}
-        onClick={onClick}
-        className="border-r-0"
-      />
-    </div>
+    <Menu
+      theme="dark"
+      mode="inline"
+      selectedKeys={activeMenuId ? [activeMenuId] : []}
+      items={antdItems}
+      onClick={onClick}
+    />
   );
 };
