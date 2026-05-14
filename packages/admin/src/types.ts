@@ -46,6 +46,7 @@ export interface AppState {
   activeMenuId: string | null;
   activeView: ViewSpec | null;
   user: { id: number; name: string; groups: string[] } | null;
+  token: string | null;
   siderCollapsed: boolean;
   breadcrumbs: BreadcrumbItem[];
 
@@ -55,4 +56,8 @@ export interface AppState {
   setUser: (user: AppState['user']) => void;
   setSiderCollapsed: (collapsed: boolean) => void;
   setBreadcrumbs: (breadcrumbs: BreadcrumbItem[]) => void;
+
+  initializeAuth: () => void;
+  login: (login: string, password: string) => Promise<void>;
+  logout: () => void;
 }

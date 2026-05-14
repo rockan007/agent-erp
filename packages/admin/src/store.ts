@@ -27,6 +27,7 @@ export const useStore = create<AppState>((set, get) => ({
   activeMenuId: null,
   activeView: null,
   user: null,
+  token: null,
   siderCollapsed: true,
   breadcrumbs: [],
 
@@ -42,6 +43,33 @@ export const useStore = create<AppState>((set, get) => ({
   setUser: (user) => set({ user }),
   setSiderCollapsed: (collapsed) => set({ siderCollapsed: collapsed }),
   setBreadcrumbs: (breadcrumbs) => set({ breadcrumbs }),
+
+  initializeAuth: () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      set({ token });
+    }
+  },
+
+  login: async (login: string, password: string) => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login, password }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error ?? 'Login failed');
+    }
+    const data = await res.json();
+    localStorage.setItem('token', data.token);
+    set({ token: data.token, user: data.user });
+  },
+
+  logout: () => {
+    localStorage.removeItem('token');
+    set({ token: null, user: null, activeView: null });
+  },
 }));
 
 declare global {
