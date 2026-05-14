@@ -46,10 +46,10 @@ export function buildWhereClause(
         builder.where(field, 'ilike', value);
         break;
       case 'in':
-        builder.whereIn(field, value as string[]);
+        builder.whereIn(field, value as readonly (string | number)[]);
         break;
       case 'not in':
-        builder.whereNotIn(field, value as string[]);
+        builder.whereNotIn(field, value as readonly (string | number)[]);
         break;
     }
   }

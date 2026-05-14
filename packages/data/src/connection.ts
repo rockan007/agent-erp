@@ -19,6 +19,10 @@ export function getConnection(): Knex {
 }
 
 export function initConnection(config: ConnectionConfig): Knex {
+  if (_knex) {
+    _knex.destroy();
+    _knex = null;
+  }
   _knex = knex({
     client: 'pg',
     connection: {
