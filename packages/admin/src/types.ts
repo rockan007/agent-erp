@@ -7,6 +7,11 @@ export interface MenuItem {
   action?: string;
 }
 
+export interface BreadcrumbItem {
+  id: string;
+  name: string;
+}
+
 export interface ViewField {
   name: string;
   label?: string;
@@ -41,9 +46,13 @@ export interface AppState {
   activeMenuId: string | null;
   activeView: ViewSpec | null;
   user: { id: number; name: string; groups: string[] } | null;
+  siderCollapsed: boolean;
+  breadcrumbs: BreadcrumbItem[];
 
   setMenuItems: (items: MenuItem[]) => void;
   setActiveMenu: (id: string) => void;
   setActiveView: (view: ViewSpec | null) => void;
   setUser: (user: AppState['user']) => void;
+  setSiderCollapsed: (collapsed: boolean) => void;
+  setBreadcrumbs: (breadcrumbs: BreadcrumbItem[]) => void;
 }
