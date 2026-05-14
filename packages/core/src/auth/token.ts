@@ -13,5 +13,17 @@ export function signToken(payload: TokenPayload): string {
 }
 
 export function verifyToken(token: string): TokenPayload {
-  return jwt.verify(token, SECRET) as TokenPayload;
+  const decoded = jwt.verify(token, SECRET);
+
+  if (typeof decoded === 'string' || decoded == null) {
+    throw new Error('Invalid token payload');
+  }
+
+  const payload = decoded as Record<string, unknown>;
+
+  if (typeof payload.userId !== 'number' || !Array.isArray(payload.groups)) {
+    throw new Error('Invalid token payload: missing userId or groups');
+  }
+
+  return { userId: payload.userId, groups: payload.groups as string[] };
 }

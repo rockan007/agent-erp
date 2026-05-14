@@ -16,3 +16,6 @@ export { maskValue, maskRecord } from './security';
 export type { MaskPattern } from './security';
 export { writeAudit, getAuditLog } from './security';
 export type { AuditEntry } from './security';
+
+export { hashPassword, verifyPassword, signToken, verifyToken } from './auth';
+export type { TokenPayload } from './auth';
