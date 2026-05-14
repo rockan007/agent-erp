@@ -1,9 +1,9 @@
 import React from 'react';
-import { Form, Input, Button, Space, Typography } from 'antd';
+import { Form, Input, Button, Space, Grid } from 'antd';
 import { SearchOutlined, ClearOutlined } from '@ant-design/icons';
 import { ViewSpec } from '../store';
 
-const { Title } = Typography;
+const { useBreakpoint } = Grid;
 
 interface Props {
   view: ViewSpec;
@@ -11,6 +11,8 @@ interface Props {
 
 export const SearchPanel: React.FC<Props> = ({ view }) => {
   const [form] = Form.useForm();
+  const screens = useBreakpoint();
+  const isNarrow = !screens.md;
 
   const handleSearch = (values: Record<string, string>) => {
     // Dispatch search with current filters
@@ -22,13 +24,11 @@ export const SearchPanel: React.FC<Props> = ({ view }) => {
   };
 
   return (
-    <div>
-      <Title level={3}>Search: {view.model}</Title>
+    <div className="max-w-4xl mx-auto">
       <Form
         form={form}
-        layout="inline"
+        layout={isNarrow ? 'vertical' : 'inline'}
         onFinish={handleSearch}
-        className="flex-wrap gap-3 mb-4"
       >
         {view.fields.map((f) => (
           <Form.Item key={f.name} name={f.name} label={f.label ?? f.name}>
