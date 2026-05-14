@@ -1,18 +1,29 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { runMigrations, Migration } from '../migration-runner';
 
-// Build a fake knex instance that the migration runner can use
+type MockFn = ReturnType<typeof vi.fn>;
+
 function createMockKnex() {
-  const tables: Record<string, unknown[]> = {};
+  const tables: Record<string, Record<string, unknown>[]> = {};
   let migrationsTableExists = false;
 
   function createQueryBuilder(tableName: string) {
-    const chain: Record<string, unknown> = { _table: tableName };
+    const chain: { _table: string; _op?: string } = { _table: tableName };
     let whereField: string | null = null;
     let whereValue: unknown = null;
 
+    const execute = (): unknown => {
+      if (chain._op === 'select') {
+        return tables[chain._table] || [];
+      }
+      if (chain._op === 'insert') {
+        return [(tables[chain._table] || []).length];
+      }
+      return undefined;
+    };
+
     const builder: Record<string, unknown> = {
-      select: vi.fn((_columns: string | string[]) => {
+      select: vi.fn(() => {
         chain._op = 'select';
         return builder;
       }),
@@ -26,72 +37,49 @@ function createMockKnex() {
         if (whereField === 'name' && chain._table === 'erp_migrations') {
           const rows = tables[chain._table] || [];
           tables[chain._table] = rows.filter(
-            (r: unknown) => (r as Record<string, unknown>).name !== whereValue,
+            (r) => r.name !== whereValue,
           );
         }
+        return undefined;
       }),
-      insert: vi.fn(async (row: unknown) => {
+      insert: vi.fn(async (row: Record<string, unknown>) => {
         if (!tables[chain._table]) {
           tables[chain._table] = [];
         }
-        tables[chain._table].push(row);
-        // Knex insert returns an array of inserted IDs
-        return [tables[chain._table].length];
+        tables[chain._table]!.push(row);
+        return [tables[chain._table]!.length];
       }),
-      then: vi.fn((resolve: (value: unknown) => void) => {
-        // When `.select('name')` is awaited, return the stored rows
-        if (chain._op === 'select') {
-          resolve(tables[chain._table] || []);
-        }
-        return Promise.resolve();
-      }),
-      // Make the builder thenable so it can be awaited like knex('table').select('name')
-      [Symbol.for('thenable')]: undefined,
+      then: (resolve: (value: unknown) => void) => {
+        resolve(execute());
+      },
     };
 
-    // Make the builder itself thenable for when select() is awaited directly
-    const proxy = new Proxy(builder, {
-      get(target, prop, receiver) {
-        if (prop === 'then') {
-          return (resolve: (value: unknown) => void, reject?: (e: Error) => void) => {
-            try {
-              if (chain._op === 'select') {
-                resolve(tables[chain._table] || []);
-              } else if (chain._op === 'where') {
-                resolve(undefined);
-              } else if (chain._op === 'insert') {
-                resolve([(tables[chain._table] || []).length]);
-              } else {
-                resolve(undefined);
-              }
-            } catch (e) {
-              reject?.(e as Error);
-            }
-          };
-        }
-        return Reflect.get(target, prop, receiver);
-      },
-    });
+    return builder;
+  }
 
-    return proxy;
+  interface ChainableMock {
+    string: () => ChainableMock;
+    primary: () => ChainableMock;
+    timestamp: () => ChainableMock;
+    defaultTo: () => ChainableMock;
   }
 
   const knexFn = ((tableName: string) => {
     return createQueryBuilder(tableName);
-  }) as unknown as Record<string, unknown>;
+  }) as unknown as Record<string, unknown> & ((tableName: string) => ReturnType<typeof createQueryBuilder>);
 
   knexFn.schema = {
-    hasTable: vi.fn(async (_name: string) => {
+    hasTable: vi.fn(async () => {
       return migrationsTableExists;
     }),
     createTable: vi.fn(async (_name: string, callback: (table: Record<string, unknown>) => void) => {
-      const mockTable = {
-        string: vi.fn(() => mockTable),
-        primary: vi.fn(() => mockTable),
-        timestamp: vi.fn(() => mockTable),
-        defaultTo: vi.fn(() => mockTable),
+      const chainable: ChainableMock = {
+        string: () => chainable,
+        primary: () => chainable,
+        timestamp: () => chainable,
+        defaultTo: () => chainable,
       };
-      callback(mockTable);
+      callback(chainable as unknown as Record<string, unknown>);
       tables['erp_migrations'] = [];
       migrationsTableExists = true;
     }),
@@ -104,7 +92,6 @@ function createMockKnex() {
   return knexFn;
 }
 
-// Mock the connection module
 vi.mock('../connection', () => {
   let _knex: Record<string, unknown> | null = null;
   return {
@@ -145,12 +132,12 @@ describe('migration-runner', () => {
       {
         name: '001_test',
         up: async () => { executed.push('001'); },
-        down: async () => { executed = executed.filter(x => x !== '001'); },
+        down: async () => { /* noop */ },
       },
       {
         name: '002_test',
         up: async () => { executed.push('002'); },
-        down: async () => { executed = executed.filter(x => x !== '002'); },
+        down: async () => { /* noop */ },
       },
     ];
 
@@ -177,5 +164,24 @@ describe('migration-runner', () => {
     await runMigrations(migrations);
     expect(executed[0]).toBe('first');
     expect(executed[1]).toBe('second');
+  });
+
+  it('should skip already completed migrations', async () => {
+    let callCount = 0;
+    const migrations: Migration[] = [
+      {
+        name: '001_skip_test',
+        up: async () => { callCount++; },
+        down: async () => {},
+      },
+    ];
+
+    // First run — should execute
+    await runMigrations(migrations);
+    expect(callCount).toBe(1);
+
+    // Second run — should skip
+    await runMigrations(migrations);
+    expect(callCount).toBe(1);
   });
 });

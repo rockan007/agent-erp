@@ -2,7 +2,8 @@ import { Knex } from 'knex';
 import { getKnex } from './connection';
 
 export type DomainOperator = '=' | '!=' | '>' | '<' | '>=' | '<=' | 'like' | 'ilike' | 'in' | 'not in';
-export type DomainTuple = [string, DomainOperator, unknown];
+type DomainValue = string | number | boolean | null | Date | string[] | number[];
+export type DomainTuple = [string, DomainOperator, DomainValue];
 export type Domain = DomainTuple[];
 
 export interface QueryOptions {
@@ -45,10 +46,10 @@ export function buildWhereClause(
         builder.where(field, 'ilike', value);
         break;
       case 'in':
-        builder.whereIn(field, value as unknown[]);
+        builder.whereIn(field, value as string[]);
         break;
       case 'not in':
-        builder.whereNotIn(field, value as unknown[]);
+        builder.whereNotIn(field, value as string[]);
         break;
     }
   }
