@@ -142,6 +142,7 @@ const WelcomeScreen: React.FC = () => {
         <motion.div variants={itemVariants} className="erp-dashboard-actions">
           {quickActions.map((action) => (
             <button
+              type="button"
               key={action.label}
               className={
                 action.primary
@@ -164,6 +165,7 @@ const WelcomeScreen: React.FC = () => {
               .slice(0, 6)
               .map((m) => (
                 <button
+                  type="button"
                   key={m.id}
                   onClick={() => setActiveMenu(m.id)}
                   className="erp-module-chip"
