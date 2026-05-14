@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Drawer, Grid } from 'antd';
+import { Layout, Drawer, Grid, Result } from 'antd';
 import { AppHeader } from './components/AppHeader';
 import { MenuRenderer } from './components/MenuRenderer';
 import { ViewRenderer } from './components/ViewRenderer';
@@ -15,7 +15,7 @@ const App: React.FC = () => {
   const siderCollapsed = useStore((s) => s.siderCollapsed);
   const setSiderCollapsed = useStore((s) => s.setSiderCollapsed);
   const screens = useBreakpoint();
-  const isMobile = !screens.md;
+  const isMobile = screens.md === false;
 
   const sidebarContent = (
     <MenuRenderer
@@ -38,7 +38,6 @@ const App: React.FC = () => {
             onCollapse={(v) => setSiderCollapsed(v)}
             theme="dark"
             trigger={null}
-            breakpoint="lg"
             className="overflow-auto"
           >
             <div className="flex items-center justify-center h-12 border-b border-gray-700">
@@ -80,13 +79,11 @@ const App: React.FC = () => {
           ) : (
             <div className="flex items-center justify-center h-full">
               <ErrorBoundary>
-                <ViewRenderer view={{
-                  id: 'welcome',
-                  model: '',
-                  type: 'kanban',
-                  title: 'Welcome',
-                  fields: [],
-                }} />
+                <Result
+                  status="info"
+                  title="Welcome to Agent ERP"
+                  subTitle="Select an item from the menu to get started."
+                />
               </ErrorBoundary>
             </div>
           )}

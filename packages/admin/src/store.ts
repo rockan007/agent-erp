@@ -27,7 +27,7 @@ export const useStore = create<AppState>((set, get) => ({
   activeMenuId: null,
   activeView: null,
   user: null,
-  siderCollapsed: false,
+  siderCollapsed: true,
   breadcrumbs: [],
 
   setMenuItems: (items) => {
