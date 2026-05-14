@@ -46,13 +46,19 @@ function authPlugin() {
               return;
             }
 
-            const token = signToken({ userId: user.id, groups: [] });
+            // Query user groups
+            const groupRows = await knex('res_users_groups_rel')
+              .where({ user_id: user.id })
+              .select('group_id');
+
+            const token = signToken({ userId: user.id, groups: groupRows.map((r: any) => String(r.group_id)) });
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
               token,
-              user: { id: user.id, name: user.name, groups: [] },
+              user: { id: user.id, name: user.name, groups: groupRows.map((r: any) => String(r.group_id)) },
             }));
-          } catch {
+          } catch (err) {
+            console.error('auth error:', err);
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'Invalid credentials' }));
           }

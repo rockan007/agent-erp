@@ -4,7 +4,6 @@ import type { MenuProps } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  UserOutlined,
   LogoutOutlined,
   ProfileOutlined,
 } from '@ant-design/icons';

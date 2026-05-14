@@ -45,9 +45,16 @@ export const useStore = create<AppState>((set, get) => ({
   setBreadcrumbs: (breadcrumbs) => set({ breadcrumbs }),
 
   initializeAuth: () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      set({ token });
+    const token = localStorage.getItem('erp_token');
+    const userJson = localStorage.getItem('erp_user');
+    if (token && userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        set({ token, user });
+      } catch {
+        localStorage.removeItem('erp_token');
+        localStorage.removeItem('erp_user');
+      }
     }
   },
 
@@ -62,12 +69,14 @@ export const useStore = create<AppState>((set, get) => ({
       throw new Error(data.error ?? 'Login failed');
     }
     const data = await res.json();
-    localStorage.setItem('token', data.token);
+    localStorage.setItem('erp_token', data.token);
+    localStorage.setItem('erp_user', JSON.stringify(data.user));
     set({ token: data.token, user: data.user });
   },
 
   logout: () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('erp_token');
+    localStorage.removeItem('erp_user');
     set({ token: null, user: null, activeView: null });
   },
 }));

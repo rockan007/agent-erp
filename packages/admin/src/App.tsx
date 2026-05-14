@@ -113,7 +113,7 @@ const WelcomeScreen: React.FC = () => {
         >
           {quickActions.map((action, i) => (
             <div key={i} className="erp-welcome-card text-center">
-              <div className="erp-welcome-card-icon text-2xl text-[#1b6b4a] mb-3">
+              <div className="erp-welcome-card-icon text-2xl text-[#1890ff] mb-3">
                 {action.icon}
               </div>
               <div className="font-semibold text-sm text-[#1a1f1c] mb-1">
