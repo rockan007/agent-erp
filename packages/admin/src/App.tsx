@@ -1,7 +1,10 @@
 import React from 'react';
+import { Layout, Button, Result } from 'antd';
 import { MenuRenderer } from './components/MenuRenderer';
 import { ViewRenderer } from './components/ViewRenderer';
 import { useStore } from './store';
+
+const { Sider, Content } = Layout;
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -19,15 +22,15 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 24, textAlign: 'center' }}>
-          <p>Something went wrong rendering this view.</p>
-          <button
-            style={{ padding: '6px 16px', cursor: 'pointer' }}
-            onClick={() => this.setState({ hasError: false })}
-          >
-            Retry
-          </button>
-        </div>
+        <Result
+          status="error"
+          title="Something went wrong rendering this view."
+          extra={
+            <Button type="primary" onClick={() => this.setState({ hasError: false })}>
+              Retry
+            </Button>
+          }
+        />
       );
     }
     return this.props.children;
@@ -38,20 +41,30 @@ const App: React.FC = () => {
   const activeView = useStore((s) => s.activeView);
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <aside style={{ width: 240, borderRight: '1px solid #e0e0e0', overflow: 'auto' }}>
+    <Layout className="h-screen">
+      <Sider
+        width={240}
+        theme="light"
+        className="overflow-auto border-r border-gray-200"
+      >
         <MenuRenderer />
-      </aside>
-      <main style={{ flex: 1, padding: 16, overflow: 'auto' }}>
-        <ErrorBoundary>
-          {activeView ? (
-            <ViewRenderer view={activeView} />
-          ) : (
-            <div>Select an item from the menu</div>
-          )}
-        </ErrorBoundary>
-      </main>
-    </div>
+      </Sider>
+      <Content className="overflow-auto bg-white">
+        <div className="p-4">
+          <ErrorBoundary>
+            {activeView ? (
+              <ViewRenderer view={activeView} />
+            ) : (
+              <Result
+                status="info"
+                title="Welcome to Agent ERP"
+                subTitle="Select an item from the menu to get started."
+              />
+            )}
+          </ErrorBoundary>
+        </div>
+      </Content>
+    </Layout>
   );
 };
 

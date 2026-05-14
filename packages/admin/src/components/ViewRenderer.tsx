@@ -1,4 +1,5 @@
 import React from 'react';
+import { Result } from 'antd';
 import { ViewSpec } from '../store';
 import { FormRenderer } from './FormRenderer';
 import { TableRenderer } from './TableRenderer';
@@ -17,10 +18,10 @@ export const ViewRenderer: React.FC<Props> = ({ view }) => {
     case 'search':
       return <SearchPanel view={view} />;
     case 'kanban':
-      return <div style={{ padding: 24, textAlign: 'center', color: '#999' }}>Kanban view — coming soon</div>;
+      return <Result status="info" title="Kanban View" subTitle="Coming soon" />;
     case 'calendar':
-      return <div style={{ padding: 24, textAlign: 'center', color: '#999' }}>Calendar view — coming soon</div>;
+      return <Result status="info" title="Calendar View" subTitle="Coming soon" />;
     default:
-      return <div>Unknown view type: {view.type}</div>;
+      return <Result status="warning" title="Unknown View Type" subTitle={`No renderer for "${view.type}"`} />;
   }
 };

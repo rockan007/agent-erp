@@ -1,44 +1,51 @@
 import React from 'react';
+import { Form, Input, Button, Space, Typography } from 'antd';
+import { SearchOutlined, ClearOutlined } from '@ant-design/icons';
 import { ViewSpec } from '../store';
+
+const { Title } = Typography;
 
 interface Props {
   view: ViewSpec;
 }
 
 export const SearchPanel: React.FC<Props> = ({ view }) => {
-  const [filters, setFilters] = React.useState<Record<string, string>>({});
+  const [form] = Form.useForm();
+
+  const handleSearch = (values: Record<string, string>) => {
+    // Dispatch search with current filters
+    console.log('Search:', view.model, values);
+  };
+
+  const handleClear = () => {
+    form.resetFields();
+  };
 
   return (
     <div>
-      <h2>Search: {view.model}</h2>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+      <Title level={3}>Search: {view.model}</Title>
+      <Form
+        form={form}
+        layout="inline"
+        onFinish={handleSearch}
+        className="flex-wrap gap-3 mb-4"
+      >
         {view.fields.map((f) => (
-          <div key={f.name}>
-            <label style={{ display: 'block', fontSize: 13 }}>{f.label ?? f.name}</label>
-            <input
-              type="text"
-              value={filters[f.name] ?? ''}
-              onChange={(e) => setFilters((prev) => ({ ...prev, [f.name]: e.target.value }))}
-              style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: 4 }}
-            />
-          </div>
+          <Form.Item key={f.name} name={f.name} label={f.label ?? f.name}>
+            <Input placeholder={f.label ?? f.name} allowClear />
+          </Form.Item>
         ))}
-      </div>
-      <div>
-        <button
-          style={{ padding: '6px 16px', marginRight: 8 }}
-          onClick={() => {
-            // Dispatch search with current filters
-            console.log('Search:', view.model, filters);
-          }}
-        >Search</button>
-        <button
-          style={{ padding: '6px 16px', background: 'none', border: '1px solid #ccc' }}
-          onClick={() => setFilters({})}
-        >
-          Clear
-        </button>
-      </div>
+        <Form.Item>
+          <Space>
+            <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+              Search
+            </Button>
+            <Button onClick={handleClear} icon={<ClearOutlined />}>
+              Clear
+            </Button>
+          </Space>
+        </Form.Item>
+      </Form>
     </div>
   );
 };

@@ -1,83 +1,123 @@
 import React from 'react';
-import { ViewSpec, ViewLayout, ViewField } from '../store';
-import { TextWidget } from './widgets/TextWidget';
-import { SelectWidget } from './widgets/SelectWidget';
+import { Form, Input, Select, Button, Tabs, Card, Row, Col, Typography } from 'antd';
+import { ViewSpec, ViewField } from '../store';
+
+const { Title } = Typography;
 
 interface Props {
   view: ViewSpec;
 }
 
-function renderField(field: ViewField, value: unknown, onChange: (name: string, value: unknown) => void) {
+function renderWidget(field: ViewField) {
   const widget = field.widget ?? 'text';
-
   switch (widget) {
-    case 'text':
-      return <TextWidget field={field} value={value as string} onChange={(v) => onChange(field.name, v)} />;
     case 'select':
-      return <SelectWidget field={field} value={value as string} onChange={(v) => onChange(field.name, v)} />;
+      return <Select placeholder="-- Select --" allowClear />;
+    case 'text':
     default:
-      return <TextWidget field={field} value={value as string} onChange={(v) => onChange(field.name, v)} />;
+      return <Input />;
   }
 }
 
-function renderLayout(
-  layout: ViewLayout | undefined,
+function renderFields(
+  fieldNames: string[],
   fields: ViewField[],
-  values: Record<string, unknown>,
-  onChange: (name: string, value: unknown) => void,
 ) {
-  if (!layout) {
-    return fields.map((f) => (
-      <div key={f.name} style={{ marginBottom: 12 }}>
-        <label style={{ display: 'block', fontSize: 14, marginBottom: 4 }}>
-          {f.label ?? f.name}
-          {f.required && <span style={{ color: 'red' }}> *</span>}
-        </label>
-        {renderField(f, values[f.name], onChange)}
-      </div>
-    ));
-  }
+  return fieldNames.map((fieldName) => {
+    const fieldDef = fields.find((f) => f.name === fieldName);
+    if (!fieldDef) return null;
+    return (
+      <Form.Item
+        key={fieldName}
+        name={fieldName}
+        label={fieldDef.label ?? fieldDef.name}
+        rules={fieldDef.required ? [{ required: true, message: `${fieldDef.label ?? fieldDef.name} is required` }] : undefined}
+      >
+        {renderWidget(fieldDef)}
+      </Form.Item>
+    );
+  });
+}
 
-  return layout.items.map((item, i) => (
-    <fieldset key={i} style={{ marginBottom: 16, border: '1px solid #e0e0e0', padding: 12, borderRadius: 4 }}>
-      {item.title && <legend style={{ fontWeight: 600 }}>{item.title}</legend>}
-      {item.fields.map((fieldName) => {
-        const fieldDef = fields.find((f) => f.name === fieldName);
-        if (!fieldDef) return null;
-        return (
-          <div key={fieldName} style={{ marginBottom: 12 }}>
-            <label style={{ display: 'block', fontSize: 14, marginBottom: 4 }}>
-              {fieldDef.label ?? fieldDef.name}
-              {fieldDef.required && <span style={{ color: 'red' }}> *</span>}
-            </label>
-            {renderField(fieldDef, values[fieldName], onChange)}
-          </div>
-        );
-      })}
-    </fieldset>
+function renderFlatFields(fields: ViewField[]) {
+  return fields.map((f) => (
+    <Form.Item
+      key={f.name}
+      name={f.name}
+      label={f.label ?? f.name}
+      rules={f.required ? [{ required: true, message: `${f.label ?? f.name} is required` }] : undefined}
+    >
+      {renderWidget(f)}
+    </Form.Item>
   ));
 }
 
 export const FormRenderer: React.FC<Props> = ({ view }) => {
-  const [values, setValues] = React.useState<Record<string, unknown>>({});
+  const [form] = Form.useForm();
 
-  const handleChange = (name: string, value: unknown) => {
-    setValues((prev) => ({ ...prev, [name]: value }));
+  const handleSave = (values: Record<string, unknown>) => {
+    // Save logic via API
+    console.log('Save:', view.model, values);
   };
 
-  const handleSave = () => {
-    // Save logic via API
+  const renderContent = () => {
+    if (!view.layout) {
+      return renderFlatFields(view.fields);
+    }
+
+    switch (view.layout.type) {
+      case 'tabs':
+        return (
+          <Tabs
+            items={view.layout.items.map((item, i) => ({
+              key: String(i),
+              label: item.title,
+              children: renderFields(item.fields, view.fields),
+            }))}
+          />
+        );
+      case 'grid':
+        return (
+          <Row gutter={[16, 0]}>
+            {view.layout.items.map((item, i) => (
+              <Col key={i} span={24 / view.layout!.items.length}>
+                <Card title={item.title} size="small" className="mb-4">
+                  {renderFields(item.fields, view.fields)}
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        );
+      case 'inline':
+      default:
+        return (
+          <>
+            {view.layout.items.map((item, i) => (
+              <Card key={i} title={item.title} size="small" className="mb-4">
+                {renderFields(item.fields, view.fields)}
+              </Card>
+            ))}
+          </>
+        );
+    }
   };
 
   return (
     <div>
-      <h2>{view.title}</h2>
-      <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-        {renderLayout(view.layout, view.fields, values, handleChange)}
-        <button type="submit" style={{ padding: '8px 24px', cursor: 'pointer' }}>
-          Save
-        </button>
-      </form>
+      <Title level={3}>{view.title}</Title>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSave}
+        className="max-w-2xl"
+      >
+        {renderContent()}
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            Save
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
 };

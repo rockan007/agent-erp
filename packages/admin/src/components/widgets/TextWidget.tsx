@@ -1,4 +1,5 @@
 import React from 'react';
+import { Input } from 'antd';
 import { ViewField } from '../../store';
 
 interface Props {
@@ -8,18 +9,9 @@ interface Props {
 }
 
 export const TextWidget: React.FC<Props> = ({ field, value, onChange }) => (
-  <input
-    type="text"
+  <Input
     value={value ?? ''}
     readOnly={field.readonly}
-    required={field.required}
     onChange={(e) => onChange(e.target.value)}
-    style={{
-      width: '100%',
-      padding: '6px 10px',
-      border: '1px solid #ccc',
-      borderRadius: 4,
-      fontSize: 14,
-    }}
   />
 );

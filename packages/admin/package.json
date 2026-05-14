@@ -2,6 +2,7 @@
   "name": "@erp/admin",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
@@ -10,10 +11,15 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.2.3",
     "@erp/core": "workspace:*",
     "@tanstack/react-query": "^5.0.0",
+    "antd": "5",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "tailwindcss": "3",
     "zustand": "^4.5.0"
   },
   "devDependencies": {

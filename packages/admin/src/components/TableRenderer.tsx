@@ -1,5 +1,9 @@
 import React from 'react';
+import { Table, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { ViewSpec } from '../store';
+
+const { Title } = Typography;
 
 function formatCell(val: unknown): string {
   if (val === null || val === undefined) return '';
@@ -14,39 +18,24 @@ interface Props {
 export const TableRenderer: React.FC<Props> = ({ view }) => {
   const [records] = React.useState<Record<string, unknown>[]>([]);
 
+  const columns: ColumnsType<Record<string, unknown>> = view.fields.map((f) => ({
+    key: f.name,
+    dataIndex: f.name,
+    title: f.label ?? f.name,
+    render: (_: unknown, record: Record<string, unknown>) => formatCell(record[f.name]),
+  }));
+
   return (
     <div>
-      <h2>{view.title}</h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            {view.fields.map((f) => (
-              <th key={f.name} style={{ textAlign: 'left', padding: 8, borderBottom: '2px solid #e0e0e0' }}>
-                {f.label ?? f.name}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {records.length === 0 ? (
-            <tr>
-              <td colSpan={view.fields.length} style={{ padding: 16, textAlign: 'center', color: '#999' }}>
-                No records found
-              </td>
-            </tr>
-          ) : (
-            records.map((record, i) => (
-              <tr key={i}>
-                {view.fields.map((f) => (
-                  <td key={f.name} style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>
-                    {formatCell(record[f.name])}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      <Title level={3}>{view.title}</Title>
+      <Table
+        columns={columns}
+        dataSource={records}
+        rowKey="id"
+        locale={{ emptyText: 'No records found' }}
+        bordered
+        size="middle"
+      />
     </div>
   );
 };
