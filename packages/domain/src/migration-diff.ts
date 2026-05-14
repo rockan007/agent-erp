@@ -61,6 +61,7 @@ export async function diffAndMigrate(
 
     if (!hasTable) {
       const sql = generateCreateTableSQL(model);
+      await knex.raw(sql);
       migrations.push(sql);
     } else {
       const existingColumns = await knex(tableName).columnInfo();
@@ -69,9 +70,9 @@ export async function diffAndMigrate(
         if (colType === 'virtual') continue;
         if (!(name in existingColumns)) {
           const sqlType = mapKnexTypeToSQL(colType);
-          migrations.push(
-            `ALTER TABLE "${tableName}" ADD COLUMN "${name}" ${sqlType}${field.required ? ' NOT NULL' : ''};`
-          );
+          const sql = `ALTER TABLE "${tableName}" ADD COLUMN "${name}" ${sqlType}${field.required ? ' NOT NULL' : ''};`;
+          await knex.raw(sql);
+          migrations.push(sql);
         }
       }
     }

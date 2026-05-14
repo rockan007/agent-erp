@@ -59,28 +59,44 @@ class ModelProxy {
   }
 
   async create(values: Record<string, unknown>): Promise<RecordData> {
-    const query = buildQuery(this.tableName, {});
-    const [result] = await query.insert(values).returning('*');
-    return result as RecordData;
+    try {
+      const query = buildQuery(this.tableName, {});
+      const [result] = await query.insert(values).returning('*');
+      return result as RecordData;
+    } catch (err) {
+      throw new Error(`Failed to create ${this.modelName}: ${(err as Error).message}`);
+    }
   }
 
   async write(ids: number[], values: Record<string, unknown>): Promise<number> {
-    const query = buildQuery(this.tableName, {});
-    return query.whereIn('id', ids).update(values);
+    try {
+      const query = buildQuery(this.tableName, {});
+      return query.whereIn('id', ids).update(values);
+    } catch (err) {
+      throw new Error(`Failed to write ${this.modelName}: ${(err as Error).message}`);
+    }
   }
 
   async unlink(ids: number[]): Promise<number> {
-    const query = buildQuery(this.tableName, {});
-    return query.whereIn('id', ids).del();
+    try {
+      const query = buildQuery(this.tableName, {});
+      return query.whereIn('id', ids).del();
+    } catch (err) {
+      throw new Error(`Failed to unlink ${this.modelName}: ${(err as Error).message}`);
+    }
   }
 
   async read(ids: number[], fields?: string[]): Promise<RecordData[]> {
-    const query = buildQuery(this.tableName, {});
-    if (fields) {
-      query.select(fields);
+    try {
+      const query = buildQuery(this.tableName, {});
+      if (fields) {
+        query.select(fields);
+      }
+      const rows = await query.whereIn('id', ids);
+      return rows as RecordData[];
+    } catch (err) {
+      throw new Error(`Failed to read ${this.modelName}: ${(err as Error).message}`);
     }
-    const rows = await query.whereIn('id', ids);
-    return rows as RecordData[];
   }
 
   withContext(extra: Record<string, unknown>): ModelProxy {
