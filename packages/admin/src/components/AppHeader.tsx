@@ -1,9 +1,8 @@
 import React from 'react';
-import { Layout, Button, Breadcrumb, Dropdown, Space } from 'antd';
+import { Layout, Button, Dropdown, Space } from 'antd';
 import type { MenuProps } from 'antd';
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
+  BellOutlined,
   LogoutOutlined,
   ProfileOutlined,
 } from '@ant-design/icons';
@@ -12,16 +11,8 @@ import { useStore } from '../store';
 const { Header } = Layout;
 
 export const AppHeader: React.FC = () => {
-  const siderCollapsed = useStore((s) => s.siderCollapsed);
-  const setSiderCollapsed = useStore((s) => s.setSiderCollapsed);
-  const breadcrumbs = useStore((s) => s.breadcrumbs);
   const user = useStore((s) => s.user);
   const logout = useStore((s) => s.logout);
-
-  const breadcrumbItems =
-    breadcrumbs.length > 0
-      ? breadcrumbs.map((b) => ({ title: b.name }))
-      : [{ title: 'Home' }];
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key === 'logout') {
@@ -36,32 +27,39 @@ export const AppHeader: React.FC = () => {
   ];
 
   return (
-    <Header className="erp-header flex items-center justify-between px-4 h-12 leading-[48px]">
+    <Header className="erp-header-brand flex items-center justify-between px-5 h-[52px] leading-[52px]">
+      {/* Left: brand */}
+      <div className="flex items-center gap-2.5">
+        <div className="erp-brand-mark" style={{ width: 28, height: 28, fontSize: 13 }}>
+          A
+        </div>
+        <span
+          className="text-white font-bold text-[15px] tracking-[-0.01em]"
+          style={{ fontFamily: "'Syne', sans-serif" }}
+        >
+          Agent ERP
+        </span>
+      </div>
+
+      {/* Right: notification + user pill */}
       <div className="flex items-center gap-3">
         <Button
           type="text"
-          icon={
-            siderCollapsed ? (
-              <MenuUnfoldOutlined className="text-[#6b726e]" />
-            ) : (
-              <MenuFoldOutlined className="text-[#6b726e]" />
-            )
-          }
-          onClick={() => setSiderCollapsed(!siderCollapsed)}
+          icon={<BellOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16 }} />}
+          className="erp-header-notify-btn"
         />
-        <Breadcrumb items={breadcrumbItems} />
+        <Dropdown menu={{ items: userMenuItems, onClick: handleMenuClick }} placement="bottomRight">
+          <Space className="erp-header-user-pill cursor-pointer">
+            <div className="erp-header-user-avatar">
+              {(user?.name ?? 'Guest').charAt(0).toUpperCase()}
+            </div>
+            <span className="erp-header-user-name">
+              {user?.name ?? 'Guest'}
+            </span>
+            <span className="erp-header-user-arrow">▾</span>
+          </Space>
+        </Dropdown>
       </div>
-
-      <Dropdown menu={{ items: userMenuItems, onClick: handleMenuClick }} placement="bottomRight">
-        <Space className="cursor-pointer hover:opacity-80 transition-opacity">
-          <div className="erp-user-avatar">
-            {(user?.name ?? 'Guest').charAt(0).toUpperCase()}
-          </div>
-          <span className="text-sm font-medium text-[#1a1f1c] hidden sm:inline">
-            {user?.name ?? 'Guest'}
-          </span>
-        </Space>
-      </Dropdown>
     </Header>
   );
 };
