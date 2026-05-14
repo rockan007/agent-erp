@@ -1,12 +1,6 @@
 import React from 'react';
 import { Layout, Drawer, Grid } from 'antd';
-import {
-  AppstoreOutlined,
-  ProfileOutlined,
-  SearchOutlined,
-  TableOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+import { SettingOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { AppHeader } from './components/AppHeader';
 import { MenuRenderer } from './components/MenuRenderer';
@@ -24,117 +18,146 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.05 },
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
   },
 };
 
 const easeOut = [0.4, 0, 0.2, 1] as const;
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, ease: easeOut },
+    transition: { duration: 0.5, ease: easeOut },
   },
 };
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.97 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.45, ease: easeOut },
+  },
+};
+
+const statCards = [
+  { label: '活跃用户', value: '1,248', change: '+12%', gradient: 'erp-stat-blue' },
+  { label: '合作伙伴', value: '356', change: '+8%', gradient: 'erp-stat-green' },
+  { label: '本月订单', value: '89', change: '+23%', gradient: 'erp-stat-gold' },
+  { label: '营收 (K)', value: '¥482', change: '+18%', gradient: 'erp-stat-purple' },
+];
+
 const quickActions = [
-  { icon: <ProfileOutlined />, label: 'Browse Records', desc: 'View and manage your data' },
-  { icon: <SearchOutlined />, label: 'Search', desc: 'Find records across modules' },
-  { icon: <TableOutlined />, label: 'Reports', desc: 'View analytics and reports' },
+  { label: '新建订单', primary: true },
+  { label: '添加伙伴', primary: false },
+  { label: '报表中心', primary: false },
+  { label: '系统设置', primary: false },
+  { label: '导入数据', primary: false },
+];
+
+const mockBars = [45, 70, 55, 85, 60, 90, 75, 95, 65, 80, 70, 88];
+
+const mockActivities = [
+  { color: '#1890ff', text: '张三 创建了新订单 #1024' },
+  { color: '#52c41a', text: '李四 更新了合作伙伴信息' },
+  { color: '#faad14', text: '王五 提交了月度报表' },
+  { color: '#722ed1', text: '系统 完成了数据备份' },
 ];
 
 const WelcomeScreen: React.FC = () => {
+  const user = useStore((s) => s.user);
   const menuItems = useStore((s) => s.menuItems);
   const setActiveMenu = useStore((s) => s.setActiveMenu);
 
-  return (
-    <div className="erp-welcome">
-      {/* Decorative elements */}
-      <div
-        className="erp-decorative-ring"
-        style={{ top: '12%', left: '8%', transform: 'translate(-50%, -50%)' }}
-      />
-      <div
-        className="erp-decorative-dot"
-        style={{ top: '18%', right: '14%' }}
-      />
-      <div
-        className="erp-decorative-dot"
-        style={{ bottom: '22%', left: '10%', width: '4px', height: '4px' }}
-      />
+  const greeting = `早上好, ${user?.name ?? 'Guest'}`;
 
+  return (
+    <div className="erp-dashboard">
       <motion.div
-        className="text-center max-w-2xl mx-auto px-8 py-20"
+        className="erp-dashboard-inner"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Icon */}
-        <motion.div variants={itemVariants} className="flex justify-center mb-10">
-          <div className="erp-welcome-icon">
-            <AppstoreOutlined className="text-[32px] text-white" />
-          </div>
+        {/* Greeting */}
+        <motion.div variants={itemVariants} className="erp-dashboard-greeting">
+          <h1 className="erp-dashboard-greeting-text">{greeting}</h1>
+          <p className="erp-dashboard-greeting-sub">以下是您的业务概览</p>
         </motion.div>
 
-        {/* Overline */}
-        <motion.div variants={itemVariants} className="mb-4">
-          <span className="erp-welcome-overline">Welcome to</span>
-        </motion.div>
-
-        {/* Heading */}
-        <motion.h1
-          variants={itemVariants}
-          className="erp-welcome-heading text-5xl sm:text-6xl md:text-7xl mb-7"
-        >
-          Agent ERP
-        </motion.h1>
-
-        {/* Decorative line */}
-        <motion.div variants={itemVariants} className="flex justify-center mb-7">
-          <div className="erp-welcome-line" />
-        </motion.div>
-
-        {/* Description */}
-        <motion.p
-          variants={itemVariants}
-          className="text-base sm:text-lg text-[#6b726e] mb-14 leading-relaxed max-w-md mx-auto"
-          style={{ fontFamily: "'DM Sans', sans-serif" }}
-        >
-          Your intelligent business management platform. Select a module from the
-          sidebar to get started.
-        </motion.p>
-
-        {/* Quick action cards */}
-        <motion.div
-          variants={itemVariants}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-14"
-        >
-          {quickActions.map((action, i) => (
-            <div key={i} className="erp-welcome-card text-center">
-              <div className="erp-welcome-card-icon text-2xl text-[#1890ff] mb-3">
-                {action.icon}
-              </div>
-              <div className="font-semibold text-sm text-[#1a1f1c] mb-1">
-                {action.label}
-              </div>
-              <div
-                className="text-xs text-[#6b726e]"
-                style={{ fontFamily: "'DM Sans', sans-serif" }}
-              >
-                {action.desc}
-              </div>
-            </div>
+        {/* Stats cards */}
+        <motion.div variants={itemVariants} className="erp-dashboard-stats">
+          {statCards.map((card) => (
+            <motion.div
+              key={card.label}
+              variants={cardVariants}
+              className={`erp-stat-card ${card.gradient}`}
+            >
+              <div className="erp-stat-label">{card.label}</div>
+              <div className="erp-stat-value">{card.value}</div>
+              <div className="erp-stat-change">{card.change} vs 上月</div>
+            </motion.div>
           ))}
         </motion.div>
 
-        {/* Module chips */}
+        {/* Content row: chart + recent */}
+        <motion.div variants={itemVariants} className="erp-dashboard-content">
+          {/* Main chart */}
+          <div className="erp-dashboard-chart">
+            <div className="erp-card-header">月度趋势</div>
+            <div className="erp-chart-bars">
+              {mockBars.map((h, i) => (
+                <div key={i} className="erp-chart-bar-col">
+                  <div
+                    className="erp-chart-bar"
+                    style={{ height: `${h}%` }}
+                  />
+                  <span className="erp-chart-label">{i + 1}月</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent activity */}
+          <div className="erp-dashboard-recent">
+            <div className="erp-card-header">最近动态</div>
+            <div className="erp-recent-list">
+              {mockActivities.map((item, i) => (
+                <div key={i} className="erp-recent-item">
+                  <div
+                    className="erp-recent-dot"
+                    style={{ background: item.color }}
+                  />
+                  <span className="erp-recent-text">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Quick actions */}
+        <motion.div variants={itemVariants} className="erp-dashboard-actions">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              className={
+                action.primary
+                  ? 'erp-action-pill erp-action-pill-primary'
+                  : 'erp-action-pill'
+              }
+            >
+              {action.primary && <span className="erp-action-plus">+</span>}
+              {action.label}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Module chips — keep existing behavior */}
         {menuItems.length > 0 && (
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-wrap justify-center gap-2.5"
-          >
+          <motion.div variants={itemVariants} className="flex flex-wrap gap-2.5">
             {menuItems
               .filter((m) => !m.parentId)
               .sort((a, b) => a.sequence - b.sequence)
