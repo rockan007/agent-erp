@@ -31,6 +31,9 @@ pnpm --filter @erp/domain exec tsc --noEmit
 # Start admin dev server (port 3000)
 pnpm --filter @erp/admin dev
 
+# Run e2e tests (Playwright, requires dev server)
+npx playwright test --config=packages/admin/playwright.config.ts
+
 # Lint / format
 pnpm lint
 pnpm format
@@ -44,7 +47,7 @@ agent-erp/
 │   ├── data/           # @erp/data — Knex connection, query builder, migration runner
 │   ├── domain/         # @erp/domain — ORM (Model, fields, env(), registry)
 │   ├── core/           # @erp/core — module system, 6-layer security
-│   └── admin/          # @erp/admin — React + Vite + Zustand shell (menu, view renderers)
+│   └── admin/          # @erp/admin — React + Vite + antd 5 + Tailwind CSS 3 shell
 └── modules/            # ERP business modules
     └── base/           # @erp-module/base — ResPartner, ResUsers, views, menus, ACL
 ```
@@ -72,12 +75,26 @@ agent-erp/
 - **`security/`**: 6-layer security — ACL (model-level group permissions), Field Security (readable/writable field filtering), Record Rules (domain filtering with `$uid` placeholder), AES Encryption (crypto-js), Data Masking (phone/email/id_card), Audit Logging (auto-creating `audit_log` table).
 
 ### @erp/admin — Admin Shell
-- **`store.ts`**: Zustand store (`AppState`) — `menuItems`, `activeMenuId`, `activeView`, `user`. SETTER-style actions. Store exposed on `window.__STORE__` for e2e testing.
-- **`MenuRenderer.tsx`**: `buildTree()` converts flat `MenuItem[]` to recursive `TreeNode[]`. Sorted by `sequence` at all levels. Renders with expand/collapse toggle.
-- **`ViewRenderer.tsx`**: Dispatches on `view.type` → `FormRenderer` / `TableRenderer` / `SearchPanel` / kanban placeholder / calendar placeholder.
-- **`FormRenderer.tsx`**: Dynamic form with field-level widget dispatch (`TextWidget`, `SelectWidget`). Supports `tabs`/`grid`/`inline` layouts via `<fieldset>` groups.
-- **`TableRenderer.tsx`**: Read-only table with "No records found" empty state.
-- **`ErrorBoundary`** class component wrapping main content area in `App.tsx`.
+
+**Tech:** React 18, Ant Design 5, Tailwind CSS 3 (via PostCSS), framer-motion, Zustand, Playwright (e2e).
+
+**Layout:** `App.tsx` renders `<Layout>` with `AppHeader` (top bar), dark `<Sider>` (desktop) or `<Drawer>` (mobile `< 768px`), `<Content>` with `<PageHeader>` + `<ErrorBoundary>` wrapping `<ViewRenderer>`.
+
+- **`types.ts`**: Pure type definitions — `MenuItem`, `ViewSpec`, `ViewField`, `ViewLayout`, `AppState`, `BreadcrumbItem`.
+- **`store.ts`**: Zustand store — `menuItems`, `activeMenuId`, `activeView`, `user`, `siderCollapsed`, `breadcrumbs`. `computeBreadcrumbs()` walks menu tree upward from `activeMenuId` via `parentId`. Breadcrumbs auto-computed when `menuItems` or `activeMenuId` changes. Store exposed on `window.__STORE__` for e2e state injection.
+- **`AppHeader.tsx`**: Header bar (48px) — collapse toggle button (`MenuFoldOutlined`/`MenuUnfoldOutlined`), "Agent ERP" brand, `<Breadcrumb>` from store, user dropdown (avatar + name, "My Profile" / "Logout").
+- **`PageHeader.tsx`**: View title (`<Title level={4}>`) + action buttons area, `px-6 py-3`, bottom border.
+- **`MenuRenderer.tsx`**: `buildTree()` converts flat `MenuItem[]` to tree sorted by `sequence`. `toAntdItems()` maps to antd `Menu` `items` prop with icon lookup. Supports `onItemClick` callback for mobile drawer close. Menu uses `theme="dark"`.
+- **`ViewRenderer.tsx`**: Dispatches on `view.type` → `FormRenderer` / `TableRenderer` / `SearchPanel` / kanban placeholder / calendar placeholder. Wraps content in `<AnimatePresence mode="wait">` + `<motion.div>` (150ms fade + y slide).
+- **`FormRenderer.tsx`**: antd `<Form>` with `layout="vertical"`. Widget dispatch: `text` → `<Input>`, `select` → `<Select>`. Supports `tabs`/`grid`/`inline` layouts. Content constrained to `max-w-3xl mx-auto`.
+- **`TableRenderer.tsx`**: antd `<Table>` with `columns` from `view.fields`, `bordered`, `size="middle"`, empty state "No records found". Responsive `scroll.x` on mobile.
+- **`SearchPanel.tsx`**: antd `<Form>` with `layout="inline"` (vertical on mobile `< md`). `<Input>` per field, Search/Clear buttons. Content constrained to `max-w-4xl mx-auto`.
+- **`ErrorBoundary.tsx`**: Class component with `getDerivedStateFromError` + `componentDidCatch` (logs errors). Shows `<Result status="error">` with Retry button. Resets on navigation via `componentDidUpdate`.
+- **`index.css`**: Tailwind directives with `@layer` ordering (`tailwind-base → antd → components → utilities`), `corePlugins.preflight: false` to avoid antd CSS conflicts.
+- **`tailwind.config.js`**: Content paths for `./src/**/*.{ts,tsx}`, `corePlugins.preflight: false`.
+- **`postcss.config.js`**: tailwindcss + autoprefixer plugins.
+- **`playwright.config.ts`**: Chrome channel, `baseURL: http://localhost:3000`, `testDir: ./e2e`.
+- **`vitest.config.ts`**: Excludes `e2e/**` from vitest runs.
 
 ## Module Pattern
 
