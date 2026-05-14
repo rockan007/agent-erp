@@ -237,109 +237,6 @@
   font-weight: 600;
 }
 
-/* ── Welcome screen ── */
-.erp-welcome {
-  position: relative;
-  overflow: hidden;
-  min-height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.erp-welcome::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 35% 45%, rgba(24, 144, 255, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 65% 55%, rgba(224, 123, 76, 0.03) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-.erp-welcome-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #1890ff, #40a9ff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    0 12px 40px rgba(24, 144, 255, 0.3),
-    0 4px 12px rgba(24, 144, 255, 0.15);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.erp-welcome-icon:hover {
-  transform: scale(1.05) rotate(-3deg);
-}
-
-.erp-welcome-overline {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--color-text-faint);
-}
-
-.erp-welcome-heading {
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--color-text);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-}
-
-.erp-welcome-line {
-  width: 56px;
-  height: 2px;
-  background: var(--color-primary);
-  border-radius: 1px;
-}
-
-.erp-welcome-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 28px 20px;
-  transition:
-    box-shadow 0.3s ease,
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.3s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-
-.erp-welcome-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(24, 144, 255, 0.03) 0%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.erp-welcome-card:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.07);
-  transform: translateY(-3px);
-  border-color: rgba(24, 144, 255, 0.2);
-}
-
-.erp-welcome-card:hover::after {
-  opacity: 1;
-}
-
-.erp-welcome-card-icon {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.erp-welcome-card:hover .erp-welcome-card-icon {
-  transform: scale(1.12);
-}
-
 /* ── Module chip ── */
 .erp-module-chip {
   padding: 8px 20px;
@@ -527,25 +424,6 @@
   box-shadow: 0 2px 10px rgba(24, 144, 255, 0.4);
 }
 
-/* ── Decorative ring (welcome page) ── */
-.erp-decorative-ring {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(24, 144, 255, 0.1);
-  position: absolute;
-  pointer-events: none;
-}
-
-.erp-decorative-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  position: absolute;
-  pointer-events: none;
-}
-
 /* ── Login page ── */
 .erp-login-page {
   position: fixed;
@@ -727,5 +605,238 @@
     left: 50%;
     transform: translateX(-50%);
     top: 40px;
+  }
+}
+
+/* ── Dashboard ── */
+.erp-dashboard {
+  min-height: 100%;
+  padding: 32px 36px 48px;
+  overflow-y: auto;
+}
+
+.erp-dashboard-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Greeting */
+.erp-dashboard-greeting {
+  margin-bottom: 28px;
+}
+.erp-dashboard-greeting-text {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+.erp-dashboard-greeting-sub {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Stats cards */
+.erp-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.erp-stat-card {
+  border-radius: 12px;
+  padding: 20px 18px;
+  color: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.erp-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+}
+.erp-stat-blue {
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  box-shadow: 0 4px 16px rgba(24,144,255,0.3);
+}
+.erp-stat-green {
+  background: linear-gradient(135deg, #52c41a, #73d13d);
+  box-shadow: 0 4px 16px rgba(82,196,26,0.3);
+}
+.erp-stat-gold {
+  background: linear-gradient(135deg, #faad14, #ffc53d);
+  box-shadow: 0 4px 16px rgba(250,173,20,0.3);
+}
+.erp-stat-purple {
+  background: linear-gradient(135deg, #722ed1, #9254de);
+  box-shadow: 0 4px 16px rgba(114,46,209,0.3);
+}
+.erp-stat-label {
+  font-size: 11px;
+  opacity: 0.75;
+  font-family: var(--font-body);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.erp-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  margin-bottom: 4px;
+}
+.erp-stat-change {
+  font-size: 10px;
+  opacity: 0.7;
+  font-family: var(--font-body);
+}
+
+/* Content row */
+.erp-dashboard-content {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.erp-card-header {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 14px;
+}
+
+/* Chart */
+.erp-dashboard-chart {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 22px 20px;
+}
+.erp-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 140px;
+}
+.erp-chart-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+.erp-chart-bar {
+  width: 100%;
+  max-width: 36px;
+  background: linear-gradient(to top, #1890ff, #69b1ff);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: height 0.4s ease;
+}
+.erp-chart-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 6px;
+  font-family: var(--font-body);
+}
+
+/* Recent activity */
+.erp-dashboard-recent {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 22px 20px;
+}
+.erp-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.erp-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.erp-recent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.erp-recent-text {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Quick action pills */
+.erp-dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.erp-action-pill {
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+.erp-action-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(24,144,255,0.1);
+}
+.erp-action-pill-primary {
+  background: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
+.erp-action-pill-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+  color: white;
+  box-shadow: 0 2px 12px rgba(24,144,255,0.3);
+}
+.erp-action-plus {
+  margin-right: 4px;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .erp-dashboard {
+    padding: 20px 16px 32px;
+  }
+  .erp-dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .erp-dashboard-content {
+    grid-template-columns: 1fr;
+  }
+  .erp-chart-bars {
+    height: 100px;
+    gap: 8px;
+  }
+  .erp-dashboard-greeting-text {
+    font-size: 22px;
+  }
+}
+@media (max-width: 480px) {
+  .erp-dashboard-stats {
+    grid-template-columns: 1fr;
   }
 }
