@@ -6,6 +6,9 @@ import {
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
+  FolderOutlined,
+  DatabaseOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import { useStore, MenuItem } from '../store';
 
@@ -14,12 +17,18 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   partners: <TeamOutlined />,
   settings: <SettingOutlined />,
   users: <UserOutlined />,
+  folders: <FolderOutlined />,
+  database: <DatabaseOutlined />,
+  reports: <BarChartOutlined />,
   default: <AppstoreOutlined />,
 };
 
 function pickIcon(name: string): React.ReactNode {
   const key = name.toLowerCase();
-  return ICON_MAP[key] ?? ICON_MAP.default!;
+  for (const [pattern, icon] of Object.entries(ICON_MAP)) {
+    if (key.includes(pattern)) return icon;
+  }
+  return ICON_MAP.default!;
 }
 
 interface TreeNode {
@@ -59,14 +68,14 @@ function toAntdItems(nodes: TreeNode[]): MenuProps['items'] {
       return {
         key: node.item.id,
         label: node.item.name,
-        icon: node.item.icon ?? pickIcon(node.item.name),
+        icon: pickIcon(node.item.name),
         children: toAntdItems(node.children),
       };
     }
     return {
       key: node.item.id,
       label: node.item.name,
-      icon: node.item.icon ?? pickIcon(node.item.name),
+      icon: pickIcon(node.item.name),
     };
   });
 }
@@ -79,6 +88,7 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
   const menuItems = useStore((s) => s.menuItems);
   const activeMenuId = useStore((s) => s.activeMenuId);
   const setActiveMenu = useStore((s) => s.setActiveMenu);
+
   const tree = buildTree(menuItems);
   const antdItems = toAntdItems(tree);
 
@@ -87,13 +97,29 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
     onItemClick?.();
   };
 
+  if (menuItems.length === 0) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center py-16 px-4 text-center"
+        style={{ color: 'rgba(255,255,255,0.25)' }}
+      >
+        <AppstoreOutlined className="text-2xl mb-3 opacity-50" />
+        <div className="text-xs font-medium">No modules loaded</div>
+      </div>
+    );
+  }
+
   return (
     <Menu
-      theme="dark"
+      theme="light"
       mode="inline"
       selectedKeys={activeMenuId ? [activeMenuId] : []}
       items={antdItems}
       onClick={onClick}
+      motion={{
+        motionName: 'ant-motion-collapse',
+        motionAppear: false,
+      }}
     />
   );
 };
