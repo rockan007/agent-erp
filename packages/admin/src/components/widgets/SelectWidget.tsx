@@ -7,8 +7,16 @@ interface Props {
   onChange: (value: string) => void;
 }
 
+function isTupleArray(v: unknown): v is [string, string][] {
+  return Array.isArray(v) && v.every(
+    (item) => Array.isArray(item) && item.length === 2 &&
+      typeof item[0] === 'string' && typeof item[1] === 'string',
+  );
+}
+
 export const SelectWidget: React.FC<Props> = ({ field, value, onChange }) => {
-  const options = (field.options?.choices as [string, string][]) ?? [];
+  const raw = field.options?.choices;
+  const options: [string, string][] = isTupleArray(raw) ? raw : [];
 
   return (
     <select

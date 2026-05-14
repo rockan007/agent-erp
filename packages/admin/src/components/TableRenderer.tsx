@@ -1,6 +1,12 @@
 import React from 'react';
 import { ViewSpec } from '../store';
 
+function formatCell(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'object') return JSON.stringify(val);
+  return String(val);
+}
+
 interface Props {
   view: ViewSpec;
 }
@@ -33,7 +39,7 @@ export const TableRenderer: React.FC<Props> = ({ view }) => {
               <tr key={i}>
                 {view.fields.map((f) => (
                   <td key={f.name} style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>
-                    {String(record[f.name] ?? '')}
+                    {formatCell(record[f.name])}
                   </td>
                 ))}
               </tr>

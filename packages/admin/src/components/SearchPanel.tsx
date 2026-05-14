@@ -25,7 +25,13 @@ export const SearchPanel: React.FC<Props> = ({ view }) => {
         ))}
       </div>
       <div>
-        <button style={{ padding: '6px 16px', marginRight: 8 }}>Search</button>
+        <button
+          style={{ padding: '6px 16px', marginRight: 8 }}
+          onClick={() => {
+            // Dispatch search with current filters
+            console.log('Search:', view.model, filters);
+          }}
+        >Search</button>
         <button
           style={{ padding: '6px 16px', background: 'none', border: '1px solid #ccc' }}
           onClick={() => setFilters({})}

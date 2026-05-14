@@ -16,6 +16,10 @@ export const ViewRenderer: React.FC<Props> = ({ view }) => {
       return <TableRenderer view={view} />;
     case 'search':
       return <SearchPanel view={view} />;
+    case 'kanban':
+      return <div style={{ padding: 24, textAlign: 'center', color: '#999' }}>Kanban view — coming soon</div>;
+    case 'calendar':
+      return <div style={{ padding: 24, textAlign: 'center', color: '#999' }}>Calendar view — coming soon</div>;
     default:
       return <div>Unknown view type: {view.type}</div>;
   }

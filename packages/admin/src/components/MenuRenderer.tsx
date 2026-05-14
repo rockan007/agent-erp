@@ -23,7 +23,12 @@ function buildTree(items: MenuItem[]): TreeNode[] {
     }
   }
 
-  return roots.sort((a, b) => a.item.sequence - b.item.sequence);
+  const sortTree = (nodes: TreeNode[]) => {
+    nodes.sort((a, b) => a.item.sequence - b.item.sequence);
+    for (const node of nodes) sortTree(node.children);
+  };
+  sortTree(roots);
+  return roots;
 }
 
 const MenuNode: React.FC<{ node: TreeNode; level: number }> = ({ node, level }) => {
