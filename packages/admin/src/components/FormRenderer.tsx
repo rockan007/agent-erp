@@ -1,8 +1,6 @@
 import React from 'react';
-import { Form, Input, Select, Button, Tabs, Card, Row, Col, Typography } from 'antd';
+import { Form, Input, Select, Button, Tabs, Card, Row, Col } from 'antd';
 import { ViewSpec, ViewField } from '../store';
-
-const { Title } = Typography;
 
 interface Props {
   view: ViewSpec;
@@ -103,13 +101,11 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
   };
 
   return (
-    <div>
-      <Title level={3}>{view.title}</Title>
+    <div className="max-w-3xl mx-auto">
       <Form
         form={form}
         layout="vertical"
         onFinish={handleSave}
-        className="max-w-2xl"
       >
         {renderContent()}
         <Form.Item>
