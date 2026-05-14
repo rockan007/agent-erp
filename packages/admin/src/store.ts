@@ -14,3 +14,10 @@ export const useStore = create<AppState>((set) => ({
   setActiveView: (view) => set({ activeView: view }),
   setUser: (user) => set({ user }),
 }));
+
+declare global {
+  interface Window { __STORE__?: typeof useStore; }
+}
+if (typeof window !== 'undefined') {
+  window.__STORE__ = useStore;
+}
