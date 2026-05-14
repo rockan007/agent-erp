@@ -6,7 +6,7 @@
 
 **Architecture:** Four-layer monorepo: Data (Knex) → Domain (ORM) → Core (Module registry, permissions, controllers) → Admin (React shell). Business modules live under `modules/`, each following the Odoo-inspired directory convention.
 
-**Tech Stack:** Node.js 18+, TypeScript 5, Knex, PostgreSQL 15+, React 18, pnpm workspace, Vitest.
+**Tech Stack:** Node.js 18+, TypeScript 5, Knex, PostgreSQL 15+, React 18, Ant Design 5, Tailwind CSS 3, PostCSS, pnpm workspace, Vitest.
 
 **Design Spec:** `docs/superpowers/specs/2026-05-14-agent-erp-design.md`
 
@@ -70,27 +70,24 @@ agent-erp/
 │       ├── package.json
 │       ├── tsconfig.json
 │       ├── index.html
+│       ├── tailwind.config.js            # Tailwind CSS config (preflight off)
+│       ├── postcss.config.js             # PostCSS with tailwind + autoprefixer
 │       └── src/
-│           ├── main.tsx                  # Entry point
-│           ├── App.tsx                   # Shell: layout, menu, view area
+│           ├── main.tsx                  # Entry point (ConfigProvider + theme)
+│           ├── App.tsx                   # Shell: antd Layout+Sider+Menu+Content
+│           ├── index.css                 # Tailwind directives + @layer ordering
 │           ├── api.ts                    # tRPC client
 │           ├── store.ts                  # Zustand store (menu, views, user)
+│           ├── types.ts                  # Pure type definitions (MenuItem, ViewSpec)
 │           ├── components/
-│           │   ├── MenuRenderer.tsx      # Recursive menu tree
+│           │   ├── MenuRenderer.tsx      # antd Menu with icon lookup
 │           │   ├── ViewRenderer.tsx      # Dispatch view type → component
-│           │   ├── FormRenderer.tsx      # Form view renderer
-│           │   ├── TableRenderer.tsx     # Tree/list view renderer
-│           │   ├── SearchPanel.tsx       # Search/filter panel
-│           │   ├── KanbanRenderer.tsx    # Kanban board renderer
-│           │   ├── CalendarRenderer.tsx  # Calendar view renderer
+│           │   ├── FormRenderer.tsx      # antd Form+Tabs+Card renderer
+│           │   ├── TableRenderer.tsx     # antd Table renderer
+│           │   ├── SearchPanel.tsx       # antd Form inline search
 │           │   └── widgets/
-│           │       ├── TextWidget.tsx
-│           │       ├── SelectWidget.tsx
-│           │       ├── NumberWidget.tsx
-│           │       ├── DateWidget.tsx
-│           │       └── StatusBarWidget.tsx
-│           └── styles/
-│               └── global.css
+│           │       ├── TextWidget.tsx    # antd Input widget
+│           │       └── SelectWidget.tsx  # antd Select widget
 │
 ├── modules/
 │   └── base/                             # Base business module
@@ -330,17 +327,24 @@ Expected: packages installed successfully, `pnpm-lock.yaml` created.
   "name": "@erp/admin",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/main.tsx",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "test": "vitest run"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.2.3",
     "@erp/core": "workspace:*",
     "@tanstack/react-query": "^5.0.0",
+    "antd": "5",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "tailwindcss": "3",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
@@ -2517,11 +2521,23 @@ export default defineConfig({
 ```typescript
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { ConfigProvider, theme } from 'antd';
 import App from './App';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ConfigProvider
+      theme={{
+        algorithm: theme.defaultAlgorithm,
+        token: {
+          colorPrimary: '#1677ff',
+          borderRadius: 6,
+        },
+      }}
+    >
+      <App />
+    </ConfigProvider>
   </React.StrictMode>,
 );
 ```
@@ -2529,23 +2545,66 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 - [ ] **Step 4: Write App.tsx**
 
 ```typescript
-import React from 'react';
+import React, { Component } from 'react';
+import { Layout, Result, Button } from 'antd';
 import { MenuRenderer } from './components/MenuRenderer';
 import { ViewRenderer } from './components/ViewRenderer';
 import { useStore } from './store';
+
+class ErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Result
+          status="error"
+          title="Something went wrong"
+          subTitle="An unexpected error occurred in the view renderer."
+          extra={
+            <Button type="primary" onClick={() => this.setState({ hasError: false })}>
+              Try Again
+            </Button>
+          }
+        />
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const App: React.FC = () => {
   const { activeView } = useStore();
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <aside style={{ width: 240, borderRight: '1px solid #e0e0e0', overflow: 'auto' }}>
+    <Layout className="h-screen">
+      <Layout.Sider width={240} theme="light">
         <MenuRenderer />
-      </aside>
-      <main style={{ flex: 1, padding: 16, overflow: 'auto' }}>
-        {activeView ? <ViewRenderer view={activeView} /> : <div>Select an item from the menu</div>}
-      </main>
-    </div>
+      </Layout.Sider>
+      <Layout.Content>
+        <ErrorBoundary>
+          {activeView ? (
+            <ViewRenderer view={activeView} />
+          ) : (
+            <Result
+              status="info"
+              title="Welcome to Agent ERP"
+              subTitle="Select an item from the menu to get started."
+            />
+          )}
+        </ErrorBoundary>
+      </Layout.Content>
+    </Layout>
   );
 };
 
@@ -2554,16 +2613,15 @@ export default App;
 
 ---
 
-### Task 5.2: Zustand store
+### Task 5.2: Zustand store + types
 
 **Files:**
+- Create: `packages/admin/src/types.ts`
 - Create: `packages/admin/src/store.ts`
 
-- [ ] **Step 1: Write store.ts**
+- [ ] **Step 1: Write types.ts (pure type definitions)**
 
 ```typescript
-import { create } from 'zustand';
-
 export interface MenuItem {
   id: string;
   name: string;
@@ -2571,15 +2629,6 @@ export interface MenuItem {
   sequence: number;
   parentId?: string;
   action?: string;
-}
-
-export interface ViewSpec {
-  id: string;
-  model: string;
-  type: 'form' | 'tree' | 'search' | 'kanban' | 'calendar';
-  title: string;
-  fields: ViewField[];
-  layout?: ViewLayout;
 }
 
 export interface ViewField {
@@ -2591,18 +2640,27 @@ export interface ViewField {
   options?: Record<string, unknown>;
 }
 
-export interface ViewLayout {
-  type: 'tabs' | 'grid' | 'inline';
-  items: ViewLayoutItem[];
-}
-
 export interface ViewLayoutItem {
   title?: string;
   fields: string[];
   widget?: string;
 }
 
-interface AppState {
+export interface ViewLayout {
+  type: 'tabs' | 'grid' | 'inline';
+  items: ViewLayoutItem[];
+}
+
+export interface ViewSpec {
+  id: string;
+  model: string;
+  type: 'form' | 'tree' | 'search' | 'kanban' | 'calendar';
+  title: string;
+  fields: ViewField[];
+  layout?: ViewLayout;
+}
+
+export interface AppState {
   menuItems: MenuItem[];
   activeMenuId: string | null;
   activeView: ViewSpec | null;
@@ -2612,6 +2670,21 @@ interface AppState {
   setActiveMenu: (id: string) => void;
   setActiveView: (view: ViewSpec | null) => void;
   setUser: (user: AppState['user']) => void;
+}
+```
+
+- [ ] **Step 2: Write store.ts**
+
+```typescript
+import { create } from 'zustand';
+import type { AppState } from './types';
+
+export type { MenuItem, ViewField, ViewLayoutItem, ViewLayout, ViewSpec, AppState } from './types';
+
+declare global {
+  interface Window {
+    __STORE__?: typeof useStore;
+  }
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -2625,6 +2698,10 @@ export const useStore = create<AppState>((set) => ({
   setActiveView: (view) => set({ activeView: view }),
   setUser: (user) => set({ user }),
 }));
+
+if (typeof window !== 'undefined') {
+  window.__STORE__ = useStore;
+}
 ```
 
 ---
@@ -2638,6 +2715,14 @@ export const useStore = create<AppState>((set) => ({
 
 ```typescript
 import React from 'react';
+import type { MenuProps } from 'antd';
+import { Menu } from 'antd';
+import {
+  AppstoreOutlined,
+  SettingOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { useStore, MenuItem } from '../store';
 
 interface TreeNode {
@@ -2662,60 +2747,61 @@ function buildTree(items: MenuItem[]): TreeNode[] {
     }
   }
 
-  return roots.sort((a, b) => a.item.sequence - b.item.sequence);
+  const sortTree = (nodes: TreeNode[]) => {
+    nodes.sort((a, b) => a.item.sequence - b.item.sequence);
+    nodes.forEach((n) => sortTree(n.children));
+  };
+  sortTree(roots);
+  return roots;
 }
 
-const MenuNode: React.FC<{ node: TreeNode; level: number }> = ({ node, level }) => {
-  const { activeMenuId, setActiveMenu } = useStore();
-  const [expanded, setExpanded] = React.useState(true);
-  const hasChildren = node.children.length > 0;
-  const isActive = activeMenuId === node.item.id;
-
-  return (
-    <div>
-      <div
-        onClick={() => {
-          if (hasChildren) {
-            setExpanded(!expanded);
-          } else {
-            setActiveMenu(node.item.id);
-          }
-        }}
-        style={{
-          padding: `8px 12px 8px ${12 + level * 16}px`,
-          cursor: 'pointer',
-          backgroundColor: isActive ? '#e3f2fd' : 'transparent',
-          fontWeight: isActive ? 600 : 400,
-          userSelect: 'none',
-        }}
-      >
-        {hasChildren && (expanded ? '▼ ' : '▶ ')}
-        {node.item.name}
-      </div>
-      {hasChildren && expanded && (
-        <div>
-          {node.children.map((child) => (
-            <MenuNode key={child.item.id} node={child} level={level + 1} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+const ICON_MAP: Record<string, React.ReactNode> = {
+  contacts: <TeamOutlined />,
+  settings: <SettingOutlined />,
+  users: <UserOutlined />,
 };
+
+function getIcon(item: MenuItem): React.ReactNode {
+  if (item.icon && ICON_MAP[item.icon]) return ICON_MAP[item.icon];
+  const lower = item.name.toLowerCase();
+  for (const [key, icon] of Object.entries(ICON_MAP)) {
+    if (lower.includes(key)) return icon;
+  }
+  return <AppstoreOutlined />;
+}
+
+function toAntdItems(nodes: TreeNode[]): MenuProps['items'] {
+  return nodes.map((node) => {
+    const hasChildren = node.children.length > 0;
+    return {
+      key: node.item.id,
+      label: node.item.name,
+      icon: hasChildren ? undefined : getIcon(node.item),
+      children: hasChildren ? toAntdItems(node.children) : undefined,
+    } as const;
+  });
+}
 
 export const MenuRenderer: React.FC = () => {
   const menuItems = useStore((s) => s.menuItems);
+  const activeMenuId = useStore((s) => s.activeMenuId);
+  const setActiveMenu = useStore((s) => s.setActiveMenu);
   const tree = buildTree(menuItems);
+  const antdItems = toAntdItems(tree);
 
   return (
-    <nav>
-      <div style={{ padding: '12px', fontWeight: 700, fontSize: 18, borderBottom: '1px solid #e0e0e0' }}>
+    <>
+      <div className="flex items-center h-12 px-4 font-bold text-lg border-b border-gray-100">
         Agent ERP
       </div>
-      {tree.map((node) => (
-        <MenuNode key={node.item.id} node={node} level={0} />
-      ))}
-    </nav>
+      <Menu
+        mode="inline"
+        selectedKeys={activeMenuId ? [activeMenuId] : []}
+        items={antdItems}
+        onClick={({ key }) => setActiveMenu(key)}
+        style={{ borderInlineEnd: 'none' }}
+      />
+    </>
   );
 };
 ```
@@ -2736,6 +2822,7 @@ export const MenuRenderer: React.FC = () => {
 
 ```typescript
 import React from 'react';
+import { Result } from 'antd';
 import { ViewSpec } from '../store';
 import { FormRenderer } from './FormRenderer';
 import { TableRenderer } from './TableRenderer';
@@ -2753,8 +2840,12 @@ export const ViewRenderer: React.FC<Props> = ({ view }) => {
       return <TableRenderer view={view} />;
     case 'search':
       return <SearchPanel view={view} />;
+    case 'kanban':
+      return <Result status="info" title="Kanban View" subTitle="Coming soon" />;
+    case 'calendar':
+      return <Result status="info" title="Calendar View" subTitle="Coming soon" />;
     default:
-      return <div>Unknown view type: {view.type}</div>;
+      return <Result status="warning" title="Unknown View Type" subTitle={view.type} />;
   }
 };
 ```
@@ -2763,86 +2854,130 @@ export const ViewRenderer: React.FC<Props> = ({ view }) => {
 
 ```typescript
 import React from 'react';
-import { ViewSpec, ViewLayout, ViewField } from '../store';
-import { TextWidget } from './widgets/TextWidget';
-import { SelectWidget } from './widgets/SelectWidget';
+import { Form, Input, Select, Tabs, Row, Col, Card, Button } from 'antd';
+import { ViewSpec, ViewField } from '../store';
 
 interface Props {
   view: ViewSpec;
 }
 
-function renderField(field: ViewField, value: unknown, onChange: (name: string, value: unknown) => void) {
+function isTupleArray(v: unknown): v is [string, string][] {
+  return (
+    Array.isArray(v) &&
+    v.every(
+      (item) =>
+        Array.isArray(item) && item.length === 2 &&
+        typeof item[0] === 'string' && typeof item[1] === 'string',
+    )
+  );
+}
+
+function renderField(field: ViewField) {
   const widget = field.widget ?? 'text';
 
   switch (widget) {
+    case 'select': {
+      const raw = field.options?.choices;
+      const choices: [string, string][] = isTupleArray(raw) ? raw : [];
+      return (
+        <Select
+          placeholder="-- Select --"
+          allowClear
+          options={choices.map(([val, label]) => ({ value: val, label }))}
+        />
+      );
+    }
     case 'text':
-      return <TextWidget field={field} value={value as string} onChange={(v) => onChange(field.name, v)} />;
-    case 'select':
-      return <SelectWidget field={field} value={value as string} onChange={(v) => onChange(field.name, v)} />;
     default:
-      return <TextWidget field={field} value={value as string} onChange={(v) => onChange(field.name, v)} />;
+      return <Input readOnly={field.readonly} />;
   }
 }
 
-function renderLayout(
-  layout: ViewLayout | undefined,
-  fields: ViewField[],
-  values: Record<string, unknown>,
-  onChange: (name: string, value: unknown) => void,
-) {
-  if (!layout) {
-    return fields.map((f) => (
-      <div key={f.name} style={{ marginBottom: 12 }}>
-        <label style={{ display: 'block', fontSize: 14, marginBottom: 4 }}>
-          {f.label ?? f.name}
-          {f.required && <span style={{ color: 'red' }}> *</span>}
-        </label>
-        {renderField(f, values[f.name], onChange)}
-      </div>
-    ));
-  }
-
-  return layout.items.map((item, i) => (
-    <fieldset key={i} style={{ marginBottom: 16, border: '1px solid #e0e0e0', padding: 12, borderRadius: 4 }}>
-      {item.title && <legend style={{ fontWeight: 600 }}>{item.title}</legend>}
-      {item.fields.map((fieldName) => {
-        const fieldDef = fields.find((f) => f.name === fieldName);
-        if (!fieldDef) return null;
-        return (
-          <div key={fieldName} style={{ marginBottom: 12 }}>
-            <label style={{ display: 'block', fontSize: 14, marginBottom: 4 }}>
-              {fieldDef.label ?? fieldDef.name}
-              {fieldDef.required && <span style={{ color: 'red' }}> *</span>}
-            </label>
-            {renderField(fieldDef, values[fieldName], onChange)}
-          </div>
-        );
-      })}
-    </fieldset>
+function renderFields(fields: ViewField[]) {
+  return fields.map((f) => (
+    <Form.Item
+      key={f.name}
+      name={f.name}
+      label={f.label ?? f.name}
+      rules={f.required ? [{ required: true, message: `${f.label ?? f.name} is required` }] : undefined}
+    >
+      {renderField(f)}
+    </Form.Item>
   ));
 }
 
+function renderLayout(view: ViewSpec) {
+  const { layout, fields } = view;
+  if (!layout) {
+    return renderFields(fields);
+  }
+
+  switch (layout.type) {
+    case 'tabs':
+      return (
+        <Tabs
+          items={layout.items.map((item) => {
+            const itemFields = item.fields
+              .map((name) => fields.find((f) => f.name === name))
+              .filter(Boolean) as ViewField[];
+            return {
+              key: item.title ?? '',
+              label: item.title,
+              children: renderFields(itemFields),
+            };
+          })}
+        />
+      );
+    case 'grid':
+      return (
+        <Row gutter={[16, 0]}>
+          {layout.items.map((item, i) => {
+            const itemFields = item.fields
+              .map((name) => fields.find((f) => f.name === name))
+              .filter(Boolean) as ViewField[];
+            return (
+              <Col key={i} span={24 / layout.items.length}>
+                <Card title={item.title} size="small">
+                  {renderFields(itemFields)}
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+      );
+    case 'inline':
+    default:
+      return layout.items.map((item, i) => {
+        const itemFields = item.fields
+          .map((name) => fields.find((f) => f.name === name))
+          .filter(Boolean) as ViewField[];
+        return (
+          <Card key={i} title={item.title} size="small" className="mb-4">
+            {renderFields(itemFields)}
+          </Card>
+        );
+      });
+  }
+}
+
 export const FormRenderer: React.FC<Props> = ({ view }) => {
-  const [values, setValues] = React.useState<Record<string, unknown>>({});
+  const [form] = Form.useForm();
 
-  const handleChange = (name: string, value: unknown) => {
-    setValues((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = () => {
-    // Placeholder: dispatch to API
+  const handleSave = (values: Record<string, unknown>) => {
     console.log('Save:', view.model, values);
   };
 
   return (
     <div>
-      <h2>{view.title}</h2>
-      <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-        {renderLayout(view.layout, view.fields, values, handleChange)}
-        <button type="submit" style={{ padding: '8px 24px', cursor: 'pointer' }}>
-          Save
-        </button>
-      </form>
+      <h1 className="text-xl font-semibold mb-4">{view.title}</h1>
+      <Form form={form} layout="vertical" onFinish={handleSave}>
+        {renderLayout(view)}
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            Save
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
 };
@@ -2852,6 +2987,8 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
 
 ```typescript
 import React from 'react';
+import { Table } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { ViewSpec } from '../store';
 
 interface Props {
@@ -2861,39 +2998,23 @@ interface Props {
 export const TableRenderer: React.FC<Props> = ({ view }) => {
   const [records, setRecords] = React.useState<Record<string, unknown>[]>([]);
 
+  const columns: ColumnsType<Record<string, unknown>> = view.fields.map((f) => ({
+    key: f.name,
+    dataIndex: f.name,
+    title: f.label ?? f.name,
+  }));
+
   return (
     <div>
-      <h2>{view.title}</h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            {view.fields.map((f) => (
-              <th key={f.name} style={{ textAlign: 'left', padding: 8, borderBottom: '2px solid #e0e0e0' }}>
-                {f.label ?? f.name}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {records.length === 0 ? (
-            <tr>
-              <td colSpan={view.fields.length} style={{ padding: 16, textAlign: 'center', color: '#999' }}>
-                No records found
-              </td>
-            </tr>
-          ) : (
-            records.map((record, i) => (
-              <tr key={i}>
-                {view.fields.map((f) => (
-                  <td key={f.name} style={{ padding: 8, borderBottom: '1px solid #f0f0f0' }}>
-                    {String(record[f.name] ?? '')}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      <h1 className="text-xl font-semibold mb-4">{view.title}</h1>
+      <Table
+        columns={columns}
+        dataSource={records}
+        rowKey="id"
+        locale={{ emptyText: 'No records found' }}
+        bordered
+        size="middle"
+      />
     </div>
   );
 };
@@ -2903,6 +3024,8 @@ export const TableRenderer: React.FC<Props> = ({ view }) => {
 
 ```typescript
 import React from 'react';
+import { Form, Input, Button } from 'antd';
+import { SearchOutlined, ClearOutlined } from '@ant-design/icons';
 import { ViewSpec } from '../store';
 
 interface Props {
@@ -2910,33 +3033,36 @@ interface Props {
 }
 
 export const SearchPanel: React.FC<Props> = ({ view }) => {
-  const [filters, setFilters] = React.useState<Record<string, string>>({});
+  const [form] = Form.useForm();
+
+  const handleSearch = (values: Record<string, string>) => {
+    console.log('Search:', view.model, values);
+  };
+
+  const handleClear = () => {
+    form.resetFields();
+  };
 
   return (
     <div>
-      <h2>Search: {view.model}</h2>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+      <h1 className="text-xl font-semibold mb-4">Search: {view.model}</h1>
+      <Form form={form} layout="inline" onFinish={handleSearch}>
         {view.fields.map((f) => (
-          <div key={f.name}>
-            <label style={{ display: 'block', fontSize: 13 }}>{f.label ?? f.name}</label>
-            <input
-              type="text"
-              value={filters[f.name] ?? ''}
-              onChange={(e) => setFilters((prev) => ({ ...prev, [f.name]: e.target.value }))}
-              style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: 4 }}
-            />
-          </div>
+          <Form.Item key={f.name} name={f.name} label={f.label ?? f.name}>
+            <Input allowClear />
+          </Form.Item>
         ))}
-      </div>
-      <div>
-        <button style={{ padding: '6px 16px', marginRight: 8 }}>Search</button>
-        <button
-          style={{ padding: '6px 16px', background: 'none', border: '1px solid #ccc' }}
-          onClick={() => setFilters({})}
-        >
-          Clear
-        </button>
-      </div>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+            Search
+          </Button>
+        </Form.Item>
+        <Form.Item>
+          <Button onClick={handleClear} icon={<ClearOutlined />}>
+            Clear
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
 };
@@ -2947,6 +3073,7 @@ export const SearchPanel: React.FC<Props> = ({ view }) => {
 TextWidget.tsx:
 ```typescript
 import React from 'react';
+import { Input } from 'antd';
 import { ViewField } from '../../store';
 
 interface Props {
@@ -2956,19 +3083,10 @@ interface Props {
 }
 
 export const TextWidget: React.FC<Props> = ({ field, value, onChange }) => (
-  <input
-    type="text"
+  <Input
     value={value ?? ''}
     readOnly={field.readonly}
-    required={field.required}
     onChange={(e) => onChange(e.target.value)}
-    style={{
-      width: '100%',
-      padding: '6px 10px',
-      border: '1px solid #ccc',
-      borderRadius: 4,
-      fontSize: 14,
-    }}
   />
 );
 ```
@@ -2976,6 +3094,7 @@ export const TextWidget: React.FC<Props> = ({ field, value, onChange }) => (
 SelectWidget.tsx:
 ```typescript
 import React from 'react';
+import { Select } from 'antd';
 import { ViewField } from '../../store';
 
 interface Props {
@@ -2984,30 +3103,80 @@ interface Props {
   onChange: (value: string) => void;
 }
 
+function isTupleArray(v: unknown): v is [string, string][] {
+  return (
+    Array.isArray(v) &&
+    v.every(
+      (item) =>
+        Array.isArray(item) && item.length === 2 &&
+        typeof item[0] === 'string' && typeof item[1] === 'string',
+    )
+  );
+}
+
 export const SelectWidget: React.FC<Props> = ({ field, value, onChange }) => {
-  const options = (field.options?.choices as [string, string][]) ?? [];
+  const raw = field.options?.choices;
+  const choices: [string, string][] = isTupleArray(raw) ? raw : [];
+  const options = choices.map(([val, label]) => ({ value: val, label }));
 
   return (
-    <select
-      value={value ?? ''}
-      required={field.required}
-      onChange={(e) => onChange(e.target.value)}
-      style={{
-        width: '100%',
-        padding: '6px 10px',
-        border: '1px solid #ccc',
-        borderRadius: 4,
-        fontSize: 14,
-      }}
-    >
-      <option value="">-- Select --</option>
-      {options.map(([val, label]) => (
-        <option key={val} value={val}>{label}</option>
-      ))}
-    </select>
+    <Select
+      value={value || undefined}
+      options={options}
+      onChange={(v) => onChange(v)}
+      placeholder="-- Select --"
+      allowClear
+      className="w-full"
+    />
   );
 };
 ```
+
+---
+
+### Task 5.5: Tailwind CSS + PostCSS config
+
+**Files:**
+- Create: `packages/admin/tailwind.config.js`
+- Create: `packages/admin/postcss.config.js`
+- Create: `packages/admin/src/index.css`
+
+- [ ] **Step 1: Write tailwind.config.js**
+
+```javascript
+export default {
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  corePlugins: { preflight: false },
+  theme: { extend: {} },
+  plugins: [],
+};
+```
+
+- [ ] **Step 2: Write postcss.config.js**
+
+```javascript
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+```
+
+- [ ] **Step 3: Write index.css (Tailwind + @layer priority ordering)**
+
+```css
+@layer tailwind-base, antd, components, utilities;
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
+@tailwind components;
+@tailwind utilities;
+```
+
+The `@layer` ordering ensures Tailwind's base layer has lowest priority, followed by antd styles, then Tailwind components and utilities. Combined with `corePlugins.preflight: false`, this prevents Tailwind's CSS reset from breaking antd components.
 
 ---
 
@@ -3030,8 +3199,7 @@ export const SelectWidget: React.FC<Props> = ({ field, value, onChange }) => {
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@erp/domain": "workspace:*",
-    "@erp/core": "workspace:*"
+    "@erp/domain": "workspace:*"
   }
 }
 ```
@@ -3445,6 +3613,18 @@ Run: `pnpm build`
 
 Expected: All packages build successfully without type errors.
 
+- [ ] **Step 2: Verify admin dev server starts**
+
+Run: `pnpm --filter @erp/admin dev`
+
+Expected: Vite starts without CSS errors, Tailwind CSS processes via PostCSS, antd ConfigProvider renders at `http://localhost:3000`.
+
+- [ ] **Step 3: Verify type checking**
+
+Run: `pnpm --filter @erp/admin exec tsc --noEmit`
+
+Expected: Zero type errors across all `.ts` and `.tsx` files.
+
 ---
 
 ### Task 7.6: Commit all changes
@@ -3459,7 +3639,8 @@ git commit -m "feat: initialize Agent ERP framework MVP
 - @erp/data: Knex connection, query builder, migration runner
 - @erp/domain: Model/Field/env ORM, registry, migration diff
 - @erp/core: Module registry/scanner, 6-layer security
-- @erp/admin: React shell, menu, view/form/table renderers
+- @erp/admin: React shell with antd Layout/Menu, Form/Table/Search renderers
+- Tailwind CSS 3 + PostCSS with @layer priority ordering
 - modules/base: Partner and Users models with views and ACLs
 - .claude/settings.json with permission configuration"
 ```
@@ -3474,7 +3655,7 @@ git commit -m "feat: initialize Agent ERP framework MVP
 | 2. Architecture (4-layer) | Phase 1-5 create data/domain/core/admin packages |
 | 3. Module System | Task 4.1 (module-registry, module-scanner) |
 | 4. ORM Design | Tasks 3.1-3.7 (model, fields, env, registry, diff) |
-| 5. View Engine | Tasks 5.1-5.4 (ViewRenderer, FormRenderer, TableRenderer, SearchPanel) |
+| 5. View Engine | Tasks 5.1-5.5 (ViewRenderer, FormRenderer, TableRenderer, SearchPanel, Tailwind/PostCSS config) |
 | 6. Permission System (6 layers) | Tasks 4.2-4.4 (ACL, field-security, record-rules, encryption, masking, audit) |
 | 7. Menu & Navigation | Task 5.3 (MenuRenderer) |
 | 8. Request Lifecycle | Task 6.3 (controller pattern) |
@@ -3502,3 +3683,12 @@ git commit -m "feat: initialize Agent ERP framework MVP
 - `FieldDefinition` type imported from `@erp/domain` used in model.ts, fields.ts, migration-diff.ts
 - `AclRule` matches across acl.ts, security/index.ts, modules/base/security/acl.ts
 - All file paths in "Create:" and "Modify:" headers match the File Map
+
+---
+
+## Revision Record
+
+| Date | Revision | Description |
+|------|----------|-------------|
+| 2026-05-14 | 1 | Initial plan — native HTML + inline styles for admin |
+| 2026-05-14 | 2 | Redesign admin UI with Ant Design 5 + Tailwind CSS 3 + PostCSS. Rewrote Tasks 5.1-5.5 (React shell, store+types, MenuRenderer, ViewRenderer+widgets, Tailwind/PostCSS config). Updated Task 1.2 admin package.json deps, Task 6.1 modules/base/package.json, Phase 7 build verification steps, and commit message. File map updated to remove styles/global.css, add tailwind.config.js, postcss.config.js, index.css, types.ts; removed unused widget files. |

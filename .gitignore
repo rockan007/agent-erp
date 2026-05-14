@@ -3,7 +3,9 @@ dist/
 *.log
 .DS_Store
 .claude/
+.playwright-mcp/
 .env
 .env.local
 *.tsbuildinfo
 coverage/
+test-results/
