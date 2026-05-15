@@ -14,4 +14,14 @@ export const baseAcl = [
     group: 'admin',
     permissions: { read: true, write: true, create: true, unlink: true },
   },
+  {
+    model: 'res.groups',
+    group: 'admin',
+    permissions: { read: true, write: true, create: true, unlink: true },
+  },
+  {
+    model: 'res.groups',
+    group: 'base_user',
+    permissions: { read: true, write: false, create: false, unlink: false },
+  },
 ];
