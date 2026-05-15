@@ -135,10 +135,15 @@ function erpPlugin() {
 
                 const ctrl = new Ctrl();
                 const ctx = { uid, params: match.params, body };
-                const result = await ctrl[route.handler](ctx);
-
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(result));
+                try {
+                  const result = await ctrl[route.handler](ctx);
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify(result ?? {}));
+                } catch (handlerErr) {
+                  console.error('[erp] handler error:', handlerErr);
+                  res.writeHead(500, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: 'Internal server error' }));
+                }
                 return;
               }
             }
