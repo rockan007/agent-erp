@@ -11,17 +11,26 @@ export class UserController {
   ];
 
   async list(ctx: { uid: number }) {
-    return envWithContext('res.users', { uid: ctx.uid }).search([]);
+    const records = await envWithContext('res.users', { uid: ctx.uid }).search([]);
+    return records.map((r: any) => {
+      const { password, ...safe } = r;
+      return safe;
+    });
   }
 
   async detail(ctx: { uid: number; params: { id: string } }) {
     const records = await envWithContext('res.users', { uid: ctx.uid })
       .browse([parseInt(ctx.params.id)]);
-    return records[0] ?? null;
+    const record = records[0] ?? null;
+    if (record) {
+      const { password, ...safe } = record as any;
+      return safe;
+    }
+    return null;
   }
 
   async create(ctx: { uid: number; body: Record<string, unknown> }) {
-    const { password, ...rest } = ctx.body;
+    const { password, groups, ...rest } = ctx.body;
     if (password && typeof password === 'string' && password.length > 0) {
       (rest as any).password = await hashPassword(password);
     }
@@ -29,7 +38,7 @@ export class UserController {
   }
 
   async update(ctx: { uid: number; params: { id: string }; body: Record<string, unknown> }) {
-    const { password, ...rest } = ctx.body;
+    const { password, groups, ...rest } = ctx.body;
     if (password && typeof password === 'string' && password.length > 0) {
       (rest as any).password = await hashPassword(password);
     }
