@@ -39,17 +39,14 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="erp-login-page">
-      {/* Background decorations */}
-      <div className="erp-login-bg-waves" />
-      <div className="erp-login-bg-squares">
-        <div className="erp-login-square erp-login-square-1" />
-        <div className="erp-login-square erp-login-square-2" />
-        <div className="erp-login-square erp-login-square-3" />
-      </div>
+      {/* Gradient blobs */}
+      <div className="erp-login-blob erp-login-blob-1" />
+      <div className="erp-login-blob erp-login-blob-2" />
+      <div className="erp-login-blob erp-login-blob-3" />
 
       {/* Top-left brand */}
       <div className="erp-login-brand">
-        <div className="erp-login-brand-icon">E</div>
+        <div className="erp-login-brand-icon">A</div>
         <div>
           <div className="erp-login-brand-name">Agent ERP</div>
           <div className="erp-login-brand-sub">智能企业管理平台</div>
@@ -59,8 +56,8 @@ const LoginPage: React.FC = () => {
       {/* Login card */}
       <motion.div
         className="erp-login-card"
-        initial={{ opacity: 0, x: 60 }}
-        animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : { opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 24 }}
+        animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : { opacity: 1, y: 0 }}
         transition={shake
           ? { duration: 0.4 }
           : { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
@@ -78,6 +75,7 @@ const LoginPage: React.FC = () => {
               prefix={<UserOutlined className="text-[#bfbfbf]" />}
               placeholder="用户名"
               autoComplete="username"
+              className="erp-login-input"
             />
           </Form.Item>
 
@@ -89,6 +87,7 @@ const LoginPage: React.FC = () => {
               prefix={<LockOutlined className="text-[#bfbfbf]" />}
               placeholder="密码"
               autoComplete="current-password"
+              className="erp-login-input"
             />
           </Form.Item>
 
