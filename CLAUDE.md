@@ -28,7 +28,7 @@ pnpm --filter @erp/domain exec vitest run src/__tests__/env.test.ts
 # Type-check a package
 pnpm --filter @erp/domain exec tsc --noEmit
 
-# Start admin dev server (port 3000)
+# Start admin dev server (default port 3000, may use next available)
 pnpm --filter @erp/admin dev
 
 # Run e2e tests (Playwright, requires dev server)
@@ -78,18 +78,23 @@ agent-erp/
 
 **Tech:** React 18, Ant Design 5, Tailwind CSS 3 (via PostCSS), framer-motion, Zustand, Playwright (e2e).
 
-**Layout:** `App.tsx` renders `<Layout>` with `AppHeader` (top bar), dark `<Sider>` (desktop) or `<Drawer>` (mobile `< 768px`), `<Content>` with `<PageHeader>` + `<ErrorBoundary>` wrapping `<ViewRenderer>`.
+**Design tokens:** `--font-display: 'Syne', sans-serif`, `--font-body: 'DM Sans', sans-serif`. Primary: `#1890ff`, brand gradient: `linear-gradient(135deg, #1890ff, #40a9ff)`.
+
+**Layout:** `App.tsx` renders `<Layout>` with `AppHeader` (top bar, 48px), light `<Sider>` (`#fafafa`, desktop) or `<Drawer>` (mobile `< 768px`), `<Content>` with `<PageHeader>` + `<ErrorBoundary>` wrapping `<ViewRenderer>`.
 
 - **`types.ts`**: Pure type definitions — `MenuItem`, `ViewSpec`, `ViewField`, `ViewLayout`, `AppState`, `BreadcrumbItem`.
-- **`store.ts`**: Zustand store — `menuItems`, `activeMenuId`, `activeView`, `user`, `siderCollapsed`, `breadcrumbs`. `computeBreadcrumbs()` walks menu tree upward from `activeMenuId` via `parentId`. Breadcrumbs auto-computed when `menuItems` or `activeMenuId` changes. Store exposed on `window.__STORE__` for e2e state injection.
-- **`AppHeader.tsx`**: Header bar (48px) — collapse toggle button (`MenuFoldOutlined`/`MenuUnfoldOutlined`), "Agent ERP" brand, `<Breadcrumb>` from store, user dropdown (avatar + name, "My Profile" / "Logout").
+- **`store.ts`**: Zustand store — `menuItems`, `activeMenuId`, `activeView`, `user`, `token`, `siderCollapsed`, `breadcrumbs`. `computeBreadcrumbs()` walks menu tree upward from `activeMenuId` via `parentId`. `login(name, password)` calls `/api/auth/login`, stores JWT in localStorage, sets `user` + `token`. `logout()` clears state + localStorage. `initializeAuth()` restores session from localStorage on mount (reads `erp_token` + `erp_user`). Store exposed on `window.__STORE__` for e2e state injection.
+- **`LoginPage.tsx`**: Full-screen login with light blue-white background (`#f0f4ff`), 3 radial gradient blobs (blue + purple), top-left brand (gradient "A" icon + "Agent ERP" + "智能企业管理平台"), centered white card (18px radius, dual-layer shadow) with username/password inputs (10px radius, `#f7f8fa` bg) and gradient blue button. Card, inputs, button, and blobs all use `clamp()` for responsive scaling across viewports. framer-motion: card entrance (fade + slide 24px), error shake, exit fade. Mobile (`< 640px`): brand centers at top, card fills width with side margins.
+- **`DashboardPage.tsx`**: Welcome dashboard — stat cards row, chart placeholder, activity list, action pills. Replaces the old welcome screen.
+- **`AppHeader.tsx`**: Header bar (48px, `#fff`, bottom shadow) — collapse toggle button, brand logo ("A" in gradient box) + "Agent ERP" text, notification bell icon (`BellOutlined`), user pill dropdown (avatar + name, "My Profile" / "Logout").
 - **`PageHeader.tsx`**: View title (`<Title level={4}>`) + action buttons area, `px-6 py-3`, bottom border.
-- **`MenuRenderer.tsx`**: `buildTree()` converts flat `MenuItem[]` to tree sorted by `sequence`. `toAntdItems()` maps to antd `Menu` `items` prop with icon lookup. Supports `onItemClick` callback for mobile drawer close. Menu uses `theme="dark"`.
+- **`MenuRenderer.tsx`**: `buildTree()` converts flat `MenuItem[]` to tree sorted by `sequence`. `toAntdItems()` maps to antd `Menu` `items` prop with icon lookup. Menu uses `theme="light"` with `#fafafa` background. Section labels rendered as `Menu.ItemGroup` titles. Supports `onItemClick` callback for mobile drawer close.
 - **`ViewRenderer.tsx`**: Dispatches on `view.type` → `FormRenderer` / `TableRenderer` / `SearchPanel` / kanban placeholder / calendar placeholder. Wraps content in `<AnimatePresence mode="wait">` + `<motion.div>` (150ms fade + y slide).
-- **`FormRenderer.tsx`**: antd `<Form>` with `layout="vertical"`. Widget dispatch: `text` → `<Input>`, `select` → `<Select>`. Supports `tabs`/`grid`/`inline` layouts. Content constrained to `max-w-3xl mx-auto`.
+- **`FormRenderer.tsx`**: antd `<Form>` with `layout="vertical"` wrapped in a white card with shadow. Widget dispatch: `text` → `<Input>`, `select` → `<Select>`. Supports `tabs`/`grid`/`inline` layouts. Content constrained to `max-w-3xl mx-auto`.
 - **`TableRenderer.tsx`**: antd `<Table>` with `columns` from `view.fields`, `bordered`, `size="middle"`, empty state "No records found". Responsive `scroll.x` on mobile.
 - **`SearchPanel.tsx`**: antd `<Form>` with `layout="inline"` (vertical on mobile `< md`). `<Input>` per field, Search/Clear buttons. Content constrained to `max-w-4xl mx-auto`.
 - **`ErrorBoundary.tsx`**: Class component with `getDerivedStateFromError` + `componentDidCatch` (logs errors). Shows `<Result status="error">` with Retry button. Resets on navigation via `componentDidUpdate`.
+- **`main.tsx`**: Entry point — calls `useStore.getState().initializeAuth()` before rendering `<App>`. If valid `erp_token` + `erp_user` in localStorage, user skips login.
 - **`index.css`**: Tailwind directives with `@layer` ordering (`tailwind-base → antd → components → utilities`), `corePlugins.preflight: false` to avoid antd CSS conflicts.
 - **`tailwind.config.js`**: Content paths for `./src/**/*.{ts,tsx}`, `corePlugins.preflight: false`.
 - **`postcss.config.js`**: tailwindcss + autoprefixer plugins.
