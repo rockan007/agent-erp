@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import type { IncomingMessage, ServerResponse } from 'http';
 import path from 'path';
-import { getModuleRegistry } from '@erp/core';
 
 function erpPlugin() {
   return {
@@ -12,7 +11,7 @@ function erpPlugin() {
       server.httpServer?.once('listening', async () => {
         try {
           const { initConnection } = await import('@erp/data');
-          const { scanModules, installModules } = await import('@erp/core');
+          const { scanModules, installModules, getModuleRegistry } = await import('@erp/core');
           const { diffAndMigrate } = await import('@erp/domain');
 
           const knex = initConnection({
@@ -96,6 +95,7 @@ function erpPlugin() {
         // Try to match a controller route
         try {
           const { verifyToken } = await import('@erp/core/auth');
+          const { getModuleRegistry } = await import('@erp/core');
 
           const registry = getModuleRegistry();
           for (const [, modDef] of registry.getAll()) {
