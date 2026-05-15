@@ -4,6 +4,7 @@ dist/
 .DS_Store
 .claude/
 .playwright-mcp/
+.superpowers/
 .env
 .env.local
 *.tsbuildinfo
