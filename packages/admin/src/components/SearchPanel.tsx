@@ -15,7 +15,6 @@ export const SearchPanel: React.FC<Props> = ({ view }) => {
   const isNarrow = !screens.md;
 
   const handleSearch = (values: Record<string, string>) => {
-    // Dispatch search with current filters
     console.log('Search:', view.model, values);
   };
 
@@ -25,27 +24,29 @@ export const SearchPanel: React.FC<Props> = ({ view }) => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Form
-        form={form}
-        layout={isNarrow ? 'vertical' : 'inline'}
-        onFinish={handleSearch}
-      >
-        {view.fields.map((f) => (
-          <Form.Item key={f.name} name={f.name} label={f.label ?? f.name}>
-            <Input placeholder={f.label ?? f.name} allowClear />
+      <div className="erp-search-panel">
+        <Form
+          form={form}
+          layout={isNarrow ? 'vertical' : 'inline'}
+          onFinish={handleSearch}
+        >
+          {view.fields.map((f) => (
+            <Form.Item key={f.name} name={f.name} label={f.label ?? f.name}>
+              <Input placeholder={f.label ?? f.name} allowClear />
+            </Form.Item>
+          ))}
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                Search
+              </Button>
+              <Button onClick={handleClear} icon={<ClearOutlined />}>
+                Clear
+              </Button>
+            </Space>
           </Form.Item>
-        ))}
-        <Form.Item>
-          <Space>
-            <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-              Search
-            </Button>
-            <Button onClick={handleClear} icon={<ClearOutlined />}>
-              Clear
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+        </Form>
+      </div>
     </div>
   );
 };

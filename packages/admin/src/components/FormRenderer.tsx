@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, Input, Select, Button, Tabs, Card, Row, Col } from 'antd';
+import { SaveOutlined } from '@ant-design/icons';
 import { ViewSpec, ViewField } from '../store';
 
 interface Props {
@@ -17,10 +18,7 @@ function renderWidget(field: ViewField) {
   }
 }
 
-function renderFields(
-  fieldNames: string[],
-  fields: ViewField[],
-) {
+function renderFields(fieldNames: string[], fields: ViewField[]) {
   return fieldNames.map((fieldName) => {
     const fieldDef = fields.find((f) => f.name === fieldName);
     if (!fieldDef) return null;
@@ -29,7 +27,11 @@ function renderFields(
         key={fieldName}
         name={fieldName}
         label={fieldDef.label ?? fieldDef.name}
-        rules={fieldDef.required ? [{ required: true, message: `${fieldDef.label ?? fieldDef.name} is required` }] : undefined}
+        rules={
+          fieldDef.required
+            ? [{ required: true, message: `${fieldDef.label ?? fieldDef.name} is required` }]
+            : undefined
+        }
       >
         {renderWidget(fieldDef)}
       </Form.Item>
@@ -54,7 +56,6 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
   const [form] = Form.useForm();
 
   const handleSave = (values: Record<string, unknown>) => {
-    // Save logic via API
     console.log('Save:', view.model, values);
   };
 
@@ -70,16 +71,18 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
             items={view.layout.items.map((item, i) => ({
               key: String(i),
               label: item.title,
-              children: renderFields(item.fields, view.fields),
+              children: (
+                <div className="pt-2">{renderFields(item.fields, view.fields)}</div>
+              ),
             }))}
           />
         );
       case 'grid':
         return (
-          <Row gutter={[16, 0]}>
+          <Row gutter={[16, 16]}>
             {view.layout.items.map((item, i) => (
               <Col key={i} span={24 / view.layout!.items.length}>
-                <Card title={item.title} size="small" className="mb-4">
+                <Card title={item.title} size="small" className="erp-card-elevated">
                   {renderFields(item.fields, view.fields)}
                 </Card>
               </Col>
@@ -91,7 +94,7 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
         return (
           <>
             {view.layout.items.map((item, i) => (
-              <Card key={i} title={item.title} size="small" className="mb-4">
+              <Card key={i} title={item.title} size="small" className="erp-card-elevated mb-4">
                 {renderFields(item.fields, view.fields)}
               </Card>
             ))}
@@ -102,18 +105,16 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSave}
-      >
-        {renderContent()}
-        <Form.Item>
-          <Button type="primary" htmlType="submit">
-            Save
-          </Button>
-        </Form.Item>
-      </Form>
+      <div className="erp-form-card">
+        <Form form={form} layout="vertical" onFinish={handleSave}>
+          {renderContent()}
+          <div className="mt-6 pt-5 border-t border-[#e8e3da]">
+            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="middle">
+              Save
+            </Button>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 };

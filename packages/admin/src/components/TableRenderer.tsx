@@ -1,6 +1,7 @@
 import React from 'react';
 import { Table, Grid } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { InboxOutlined } from '@ant-design/icons';
 import { ViewSpec } from '../store';
 
 const { useBreakpoint } = Grid;
@@ -27,14 +28,22 @@ export const TableRenderer: React.FC<Props> = ({ view }) => {
   }));
 
   return (
-    <Table
-      columns={columns}
-      dataSource={records}
-      rowKey="id"
-      locale={{ emptyText: 'No records found' }}
-      bordered
-      size="middle"
-      scroll={!screens.md ? { x: 'max-content' } : undefined}
-    />
+    <div className="erp-table">
+      <Table
+        columns={columns}
+        dataSource={records}
+        rowKey="id"
+        locale={{ emptyText: (
+          <div className="erp-empty-state">
+            <InboxOutlined className="text-3xl text-[#d8d3ca] mb-3 block" />
+            <div className="text-sm font-medium text-[#6b726e]">No records found</div>
+            <div className="text-xs text-[#9e9890] mt-1">Create your first record to get started</div>
+          </div>
+        )}}
+        size="middle"
+        scroll={!screens.md ? { x: 'max-content' } : undefined}
+        pagination={false}
+      />
+    </div>
   );
 };
