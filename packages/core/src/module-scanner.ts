@@ -45,7 +45,7 @@ export async function scanModules(options: ScanOptions): Promise<string[]> {
   return loaded;
 }
 
-export async function installModules(moduleNames: string[]): Promise<void> {
+export async function installModules(moduleNames: string[], knex?: any): Promise<void> {
   const registry = getModuleRegistry();
 
   for (const name of moduleNames) {
@@ -56,6 +56,13 @@ export async function installModules(moduleNames: string[]): Promise<void> {
     const modelRegistry = getModelRegistry();
     for (const modelClass of mod.models) {
       modelRegistry.register(modelClass);
+    }
+
+    // Execute seed data
+    if (knex) {
+      for (const seedFn of mod.dataFiles) {
+        await seedFn(knex);
+      }
     }
 
     mod.installed = true;
