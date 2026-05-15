@@ -23,5 +23,13 @@ export const baseMenus: MenuItem[] = [
     name: 'Users',
     sequence: 10,
     parentId: 'settings_root',
+    action: 'res.users.tree',
+  },
+  {
+    id: 'group_menu',
+    name: 'Groups',
+    sequence: 20,
+    parentId: 'settings_root',
+    action: 'res.groups.tree',
   },
 ];
