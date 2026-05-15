@@ -1,14 +1,24 @@
 import { ResPartner } from './models/res_partner';
 import { ResUsers } from './models/res_users';
+import { ResGroups } from './models/res_groups';
 import { partnerForm } from './views/res_partner.form';
 import { partnerTree } from './views/res_partner.tree';
 import { partnerSearch } from './views/res_partner.search';
+import { userForm } from './views/res_users.form';
+import { userTree } from './views/res_users.tree';
+import { userSearch } from './views/res_users.search';
+import { groupForm } from './views/res_groups.form';
+import { groupTree } from './views/res_groups.tree';
 import { baseMenus } from './views/menus';
 import { PartnerController } from './controllers/partner_controller';
+import { UserController } from './controllers/user_controller';
+import { GroupController } from './controllers/group_controller';
 import { baseAcl } from './security/acl';
+import seed from './data/seed';
 
-export const models = [ResPartner, ResUsers];
-export const views = [partnerForm, partnerTree, partnerSearch];
+export const models = [ResPartner, ResUsers, ResGroups];
+export const views = [partnerForm, partnerTree, partnerSearch, userForm, userTree, userSearch, groupForm, groupTree];
 export const menus = baseMenus;
-export const controllers = [PartnerController];
+export const controllers = [PartnerController, UserController, GroupController];
 export const security = baseAcl;
+export const data = [seed];
