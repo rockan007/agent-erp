@@ -1,5 +1,5 @@
 import { envWithContext } from '@erp/domain';
-import { hashPassword } from '@erp/core/auth';
+import { hashPassword } from '@erp/core';
 
 export class UserController {
   static routes = [
@@ -34,7 +34,9 @@ export class UserController {
     if (password && typeof password === 'string' && password.length > 0) {
       (rest as any).password = await hashPassword(password);
     }
-    return envWithContext('res.users', { uid: ctx.uid }).create(rest);
+    const created = await envWithContext('res.users', { uid: ctx.uid }).create(rest);
+    const { password: _, ...safe } = created as any;
+    return safe;
   }
 
   async update(ctx: { uid: number; params: { id: string }; body: Record<string, unknown> }) {
@@ -42,8 +44,13 @@ export class UserController {
     if (password && typeof password === 'string' && password.length > 0) {
       (rest as any).password = await hashPassword(password);
     }
-    return envWithContext('res.users', { uid: ctx.uid })
+    const result = await envWithContext('res.users', { uid: ctx.uid })
       .write([parseInt(ctx.params.id)], rest);
+    if (result) {
+      const { password: _, ...safe } = result as any;
+      return safe;
+    }
+    return result;
   }
 
   async delete(ctx: { uid: number; params: { id: string } }) {

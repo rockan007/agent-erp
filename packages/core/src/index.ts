@@ -2,8 +2,8 @@ export const VERSION = '0.1.0';
 
 export { ModuleRegistry, getModuleRegistry } from './module-registry';
 export type { ModuleDefinition, ModuleManifest, ControllerClass, RouteDefinition } from './module-registry';
-export { scanModules, installModules } from './module-scanner';
-export type { ScanOptions } from './module-scanner';
+export { scanModules, installModules, discoverModules, runModuleSeeds } from './module-scanner';
+export type { ScanOptions, ModuleLoader, ModulePathInfo } from './module-scanner';
 
 export {
   AclRegistry, getAclRegistry,

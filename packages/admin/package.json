@@ -13,6 +13,8 @@
   "dependencies": {
     "@ant-design/icons": "^6.2.3",
     "@erp/core": "workspace:*",
+    "@erp/data": "workspace:*",
+    "@erp/domain": "workspace:*",
     "@tanstack/react-query": "^5.0.0",
     "antd": "5",
     "autoprefixer": "^10.5.0",

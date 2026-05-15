@@ -55,6 +55,7 @@ export async function diffAndMigrate(
 ): Promise<string[]> {
   const migrations: string[] = [];
 
+  // Pass 1: create main tables and add missing columns
   for (const model of models) {
     const tableName = model._table ?? model._name.replace(/\./g, '_');
     const hasTable = await knex.schema.hasTable(tableName);
@@ -74,6 +75,25 @@ export async function diffAndMigrate(
           await knex.raw(sql);
           migrations.push(sql);
         }
+      }
+    }
+  }
+
+  // Pass 2: create many2many junction tables (after all main tables exist)
+  for (const model of models) {
+    const tableName = model._table ?? model._name.replace(/\./g, '_');
+
+    for (const [, field] of Object.entries(model.fields)) {
+      if (field.type !== 'many2many') continue;
+      const junctionTable = field.table ?? `${tableName}_${field.comodel?.replace(/\./g, '_')}_rel`;
+      const col1 = field.column1 ?? `${model._name.replace(/\./g, '_')}_id`;
+      const col2 = field.column2 ?? `${field.comodel?.replace(/\./g, '_')}_id`;
+
+      const hasJunction = await knex.schema.hasTable(junctionTable);
+      if (!hasJunction) {
+        const sql = `CREATE TABLE IF NOT EXISTS "${junctionTable}" (\n  "${col1}" INTEGER NOT NULL,\n  "${col2}" INTEGER NOT NULL,\n  PRIMARY KEY ("${col1}", "${col2}")\n);`;
+        await knex.raw(sql);
+        migrations.push(sql);
       }
     }
   }

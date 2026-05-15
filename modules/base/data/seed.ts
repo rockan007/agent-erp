@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import { hashPassword } from '@erp/core/auth';
+import { hashPassword } from '@erp/core';
 
 export default async function seed(knex: Knex): Promise<void> {
   // Insert groups (idempotent)

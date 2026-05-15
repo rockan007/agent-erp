@@ -10,29 +10,45 @@ function erpPlugin() {
       // --- Startup: init DB, scan modules, install, migrate, seed ---
       server.httpServer?.once('listening', async () => {
         try {
-          const { initConnection } = await import('@erp/data');
-          const { scanModules, installModules, getModuleRegistry } = await import('@erp/core');
-          const { diffAndMigrate } = await import('@erp/domain');
+          const { initConnection } = await server.ssrLoadModule('@erp/data');
+          const { diffAndMigrate } = await server.ssrLoadModule('@erp/domain');
+          const { scanModules, installModules, runModuleSeeds, getModuleRegistry } =
+            await server.ssrLoadModule('@erp/core');
 
           const knex = initConnection({
             host: process.env.DB_HOST ?? 'localhost',
             port: parseInt(process.env.DB_PORT ?? '5432'),
-            database: process.env.DB_NAME ?? 'agent_erp',
+            database: process.env.DB_DATABASE ?? 'agent_erp',
             user: process.env.DB_USER ?? 'postgres',
-            password: process.env.DB_PASSWORD ?? 'postgres',
+            password: process.env.DB_PASSWORD ?? 'admin',
           });
 
           const modulesPath = path.resolve(__dirname, '..', '..', 'modules');
-          const moduleNames = await scanModules({ modulesPath });
+
+          // SSR-aware loader: uses Vite's ssrLoadModule to import .ts files
+          const loader = {
+            loadManifest: async (modulePath: string) => {
+              const m = await server.ssrLoadModule(path.join(modulePath, 'manifest.ts'));
+              return m.default;
+            },
+            loadIndex: async (modulePath: string) => {
+              return server.ssrLoadModule(path.join(modulePath, 'index.ts'));
+            },
+          };
+
+          const moduleNames = await scanModules({ modulesPath }, loader);
 
           const order = getModuleRegistry().resolveDependencies();
-          await installModules(order, knex);
+          await installModules(order);
 
           // Run migrations for all registered models
-          const { getModelRegistry } = await import('@erp/domain');
+          const { getModelRegistry } = await server.ssrLoadModule('@erp/domain');
           for (const [, def] of getModelRegistry().getAll()) {
             await diffAndMigrate(knex, [def]);
           }
+
+          // Run seed data after tables are created
+          await runModuleSeeds(order, knex);
 
           console.log(`[erp] Modules installed: ${order.join(', ')}`);
         } catch (err) {
@@ -46,8 +62,8 @@ function erpPlugin() {
           const body = await readBody(req);
           try {
             const { login, password } = JSON.parse(body);
-            const { getKnex } = await import('@erp/data');
-            const { verifyPassword, signToken } = await import('@erp/core/auth');
+            const { getKnex } = await server.ssrLoadModule('@erp/data');
+            const { verifyPassword, signToken } = await server.ssrLoadModule('@erp/core');
 
             const knex = getKnex();
             const user = await knex('res_users')
@@ -94,8 +110,8 @@ function erpPlugin() {
 
         // Try to match a controller route
         try {
-          const { verifyToken } = await import('@erp/core/auth');
-          const { getModuleRegistry } = await import('@erp/core');
+          const { verifyToken } = await server.ssrLoadModule('@erp/core');
+          const { getModuleRegistry } = await server.ssrLoadModule('@erp/core');
 
           const registry = getModuleRegistry();
           for (const [, modDef] of registry.getAll()) {
@@ -207,6 +223,15 @@ function readBody(req: IncomingMessage): Promise<string> {
 
 export default defineConfig({
   plugins: [erpPlugin(), react()],
+  envDir: path.resolve(__dirname, '..', '..'),
+  resolve: {
+    alias: {
+      '@erp/core': path.resolve(__dirname, '..', 'core', 'src'),
+      '@erp/domain': path.resolve(__dirname, '..', 'domain', 'src'),
+      '@erp/data': path.resolve(__dirname, '..', 'data', 'src'),
+      '@erp/admin': path.resolve(__dirname, 'src'),
+    },
+  },
   server: {
     port: 3000,
   },

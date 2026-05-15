@@ -6,8 +6,16 @@ export interface ScanOptions {
   modulesPath: string;
 }
 
-export async function scanModules(options: ScanOptions): Promise<string[]> {
-  const registry = getModuleRegistry();
+export interface ModulePathInfo {
+  name: string;
+  absPath: string;
+}
+
+/**
+ * Discover module directories. Returns list of { name, absPath }.
+ * Does NOT import any files — caller must load manifest + index.
+ */
+export function discoverModules(options: ScanOptions): ModulePathInfo[] {
   const absPath = resolve(options.modulesPath);
 
   if (!existsSync(absPath)) {
@@ -15,7 +23,7 @@ export async function scanModules(options: ScanOptions): Promise<string[]> {
   }
 
   const entries = readdirSync(absPath);
-  const loaded: string[] = [];
+  const result: ModulePathInfo[] = [];
 
   for (const entry of entries) {
     const modulePath = join(absPath, entry);
@@ -27,8 +35,33 @@ export async function scanModules(options: ScanOptions): Promise<string[]> {
 
     if (!existsSync(manifestPath) || !existsSync(indexPath)) continue;
 
-    const manifest = (await import(manifestPath)).default as ModuleManifest;
-    const moduleExports = await import(indexPath);
+    result.push({ name: entry, absPath: modulePath });
+  }
+
+  return result;
+}
+
+export interface ModuleLoader {
+  loadManifest(modulePath: string): Promise<ModuleManifest>;
+  loadIndex(modulePath: string): Promise<{
+    models?: any[];
+    controllers?: any[];
+    data?: any[];
+  }>;
+}
+
+/**
+ * Scan and register modules using the provided loader.
+ * The loader abstracts how .ts files are imported (native import, ssrLoadModule, etc.).
+ */
+export async function scanModules(options: ScanOptions, loader: ModuleLoader): Promise<string[]> {
+  const registry = getModuleRegistry();
+  const discovered = discoverModules(options);
+  const loaded: string[] = [];
+
+  for (const mod of discovered) {
+    const manifest = await loader.loadManifest(mod.absPath);
+    const moduleExports = await loader.loadIndex(mod.absPath);
 
     const moduleDef: ModuleDefinition = {
       manifest,
@@ -45,7 +78,7 @@ export async function scanModules(options: ScanOptions): Promise<string[]> {
   return loaded;
 }
 
-export async function installModules(moduleNames: string[], knex?: any): Promise<void> {
+export async function installModules(moduleNames: string[]): Promise<void> {
   const registry = getModuleRegistry();
 
   for (const name of moduleNames) {
@@ -58,13 +91,19 @@ export async function installModules(moduleNames: string[], knex?: any): Promise
       modelRegistry.register(modelClass);
     }
 
-    // Execute seed data
-    if (knex) {
-      for (const seedFn of mod.dataFiles) {
-        await seedFn(knex);
-      }
-    }
-
     mod.installed = true;
+  }
+}
+
+export async function runModuleSeeds(moduleNames: string[], knex: any): Promise<void> {
+  const registry = getModuleRegistry();
+
+  for (const name of moduleNames) {
+    const mod = registry.get(name);
+    if (!mod) continue;
+
+    for (const seedFn of mod.dataFiles) {
+      await seedFn(knex);
+    }
   }
 }
