@@ -34,6 +34,10 @@ pnpm --filter @erp/admin dev
 # Run e2e tests (Playwright, requires dev server)
 npx playwright test --config=packages/admin/playwright.config.ts
 
+# Clean up test-generated files after each test run
+# (screenshots, snapshots, etc. under .playwright-mcp/ and project root *.png)
+rm -rf .playwright-mcp/*.png *.png
+
 # Lint / format
 pnpm lint
 pnpm format
