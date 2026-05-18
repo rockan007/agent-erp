@@ -30,11 +30,44 @@
 
 /* ── Noise grain overlay ── */
 .erp-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   position: relative;
   background:
     radial-gradient(ellipse 70% 50% at 25% 85%, rgba(24, 144, 255, 0.03) 0%, transparent 55%),
     radial-gradient(ellipse 50% 40% at 75% 15%, rgba(224, 123, 76, 0.02) 0%, transparent 55%),
     var(--color-content-bg);
+}
+
+.erp-content-fixed {
+  flex-shrink: 0;
+}
+
+.erp-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+.erp-content-scroll:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.08) transparent;
+}
+.erp-content-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.erp-content-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.erp-content-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+.erp-content-scroll:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .erp-content::before {
@@ -163,15 +196,7 @@
   color: var(--color-text);
 }
 
-/* ── Scrollbar: hidden on content, subtle on sidebar ── */
-.erp-content {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.erp-content::-webkit-scrollbar {
-  display: none;
-}
-
+/* ── Scrollbar: subtle on sidebar ── */
 .erp-sider-light {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
@@ -416,9 +441,7 @@
 
 /* ── Dashboard ── */
 .erp-dashboard {
-  min-height: 100%;
   padding: 32px 36px 48px;
-  overflow-y: auto;
 }
 
 .erp-dashboard-inner {
