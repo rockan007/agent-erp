@@ -708,6 +708,10 @@
   background: #fafbfc !important;
   border-right: 1px solid #e8ecf1;
   overflow: auto;
+  transition: flex 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .erp-sider-light .ant-layout-sider-children {
