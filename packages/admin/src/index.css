@@ -9,6 +9,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Root reset (preflight is disabled to avoid antd conflicts) ── */
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
 /* ── Design tokens ── */
 :root {
   --color-primary: #1890ff;
