@@ -201,7 +201,7 @@ const App: React.FC = () => {
     <Layout className="h-screen">
       <AppHeader />
 
-      <Layout>
+      <Layout className="overflow-hidden">
         {/* Desktop sidebar */}
         {!isMobile && (
           <Sider
@@ -268,24 +268,34 @@ const App: React.FC = () => {
         )}
 
         {/* Content */}
-        <Content className="erp-content" style={{ overflow: 'auto' }}>
+        <Content className="erp-content">
           {activeView ? (
-            <div className="erp-animate-in">
-              <PageHeader view={activeView} />
-              <div className="px-6 py-6">
-                <ErrorBoundary>
-                  <ViewRenderer view={activeView} />
-                </ErrorBoundary>
+            <>
+              <div className="erp-content-fixed">
+                <PageHeader view={activeView} />
               </div>
-            </div>
+              <div className="erp-content-scroll">
+                <div className="erp-animate-in">
+                  <div className="px-6 py-6">
+                    <ErrorBoundary>
+                      <ViewRenderer view={activeView} />
+                    </ErrorBoundary>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
             <>
-              <div className="erp-content-breadcrumb">
-                <span className="erp-breadcrumb-home">Home</span>
+              <div className="erp-content-fixed">
+                <div className="erp-content-breadcrumb">
+                  <span className="erp-breadcrumb-home">Home</span>
+                </div>
               </div>
-              <ErrorBoundary>
-                <WelcomeScreen />
-              </ErrorBoundary>
+              <div className="erp-content-scroll">
+                <ErrorBoundary>
+                  <WelcomeScreen />
+                </ErrorBoundary>
+              </div>
             </>
           )}
         </Content>
