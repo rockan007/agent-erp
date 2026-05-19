@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ModelRegistry, getModelRegistry } from '../registry';
+import { ModelRegistry } from '../registry';
 import { Model, model, BaseModel } from '../model';
 
 describe('ModelRegistry', () => {

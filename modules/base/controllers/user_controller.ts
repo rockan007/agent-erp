@@ -12,42 +12,42 @@ export class UserController {
 
   async list(ctx: { uid: number }) {
     const records = await envWithContext('res.users', { uid: ctx.uid }).search([]);
-    return records.map((r: any) => {
-      const { password, ...safe } = r;
+    return records.map((r: Record<string, unknown>) => {
+      const { password: _password, ...safe } = r;
       return safe;
     });
   }
 
   async detail(ctx: { uid: number; params: { id: string } }) {
     const records = await envWithContext('res.users', { uid: ctx.uid })
-      .browse([parseInt(ctx.params.id)]);
+      .browse([parseInt(ctx.params.id, 10)]);
     const record = records[0] ?? null;
     if (record) {
-      const { password, ...safe } = record as any;
+      const { password: _password, ...safe } = record as Record<string, unknown>;
       return safe;
     }
     return null;
   }
 
   async create(ctx: { uid: number; body: Record<string, unknown> }) {
-    const { password, groups, ...rest } = ctx.body;
+    const { password, ...rest } = ctx.body;
     if (password && typeof password === 'string' && password.length > 0) {
-      (rest as any).password = await hashPassword(password);
+      (rest as Record<string, unknown>).password = await hashPassword(password);
     }
     const created = await envWithContext('res.users', { uid: ctx.uid }).create(rest);
-    const { password: _, ...safe } = created as any;
+    const { password: _password, ...safe } = created as Record<string, unknown>;
     return safe;
   }
 
   async update(ctx: { uid: number; params: { id: string }; body: Record<string, unknown> }) {
-    const { password, groups, ...rest } = ctx.body;
+    const { password, ...rest } = ctx.body;
     if (password && typeof password === 'string' && password.length > 0) {
-      (rest as any).password = await hashPassword(password);
+      (rest as Record<string, unknown>).password = await hashPassword(password);
     }
     const result = await envWithContext('res.users', { uid: ctx.uid })
-      .write([parseInt(ctx.params.id)], rest);
+      .write([parseInt(ctx.params.id, 10)], rest);
     if (result) {
-      const { password: _, ...safe } = result as any;
+      const { password: _password, ...safe } = result as Record<string, unknown>;
       return safe;
     }
     return result;
@@ -55,6 +55,6 @@ export class UserController {
 
   async delete(ctx: { uid: number; params: { id: string } }) {
     return envWithContext('res.users', { uid: ctx.uid })
-      .unlink([parseInt(ctx.params.id)]);
+      .unlink([parseInt(ctx.params.id, 10)]);
   }
 }

@@ -44,9 +44,9 @@ export function discoverModules(options: ScanOptions): ModulePathInfo[] {
 export interface ModuleLoader {
   loadManifest(modulePath: string): Promise<ModuleManifest>;
   loadIndex(modulePath: string): Promise<{
-    models?: any[];
-    controllers?: any[];
-    data?: any[];
+    models?: Record<string, unknown>[];
+    controllers?: Record<string, unknown>[];
+    data?: ((knex: Record<string, unknown>) => Promise<void>)[];
   }>;
 }
 
@@ -65,8 +65,8 @@ export async function scanModules(options: ScanOptions, loader: ModuleLoader): P
 
     const moduleDef: ModuleDefinition = {
       manifest,
-      models: moduleExports.models ?? [],
-      controllers: moduleExports.controllers ?? [],
+      models: (moduleExports.models ?? []) as unknown as ModuleDefinition['models'],
+      controllers: (moduleExports.controllers ?? []) as unknown as ModuleDefinition['controllers'],
       dataFiles: moduleExports.data ?? [],
       installed: false,
     };
@@ -95,7 +95,7 @@ export async function installModules(moduleNames: string[]): Promise<void> {
   }
 }
 
-export async function runModuleSeeds(moduleNames: string[], knex: any): Promise<void> {
+export async function runModuleSeeds(moduleNames: string[], knex: Record<string, unknown>): Promise<void> {
   const registry = getModuleRegistry();
 
   for (const name of moduleNames) {

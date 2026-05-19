@@ -15,7 +15,7 @@ export class PartnerController {
 
   async detail(ctx: { uid: number; params: { id: string } }) {
     const records = await envWithContext('res.partner', { uid: ctx.uid })
-      .browse([parseInt(ctx.params.id)]);
+      .browse([parseInt(ctx.params.id, 10)]);
     return records[0] ?? null;
   }
 
@@ -25,11 +25,11 @@ export class PartnerController {
 
   async update(ctx: { uid: number; params: { id: string }; body: Record<string, unknown> }) {
     return envWithContext('res.partner', { uid: ctx.uid })
-      .write([parseInt(ctx.params.id)], ctx.body);
+      .write([parseInt(ctx.params.id, 10)], ctx.body);
   }
 
   async delete(ctx: { uid: number; params: { id: string } }) {
     return envWithContext('res.partner', { uid: ctx.uid })
-      .unlink([parseInt(ctx.params.id)]);
+      .unlink([parseInt(ctx.params.id, 10)]);
   }
 }

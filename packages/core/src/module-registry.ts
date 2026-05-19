@@ -24,7 +24,7 @@ export interface ModuleDefinition {
   manifest: ModuleManifest;
   models: (typeof BaseModel)[];
   controllers: ControllerClass[];
-  dataFiles: Array<(knex: any) => Promise<void>>;
+  dataFiles: Array<(knex: Record<string, unknown>) => Promise<void>>;
   installed: boolean;
 }
 

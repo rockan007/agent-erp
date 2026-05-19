@@ -17,8 +17,8 @@ const LoginPage: React.FC = () => {
     try {
       await login(values.login, values.password);
       setExiting(true);
-    } catch (e: any) {
-      setError(e.message ?? 'Login failed');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Login failed');
       setShake(true);
       setTimeout(() => setShake(false), 500);
     } finally {

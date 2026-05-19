@@ -3,10 +3,57 @@ import react from '@vitejs/plugin-react';
 import type { IncomingMessage, ServerResponse } from 'http';
 import path from 'path';
 
+function readBody(req: IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
+}
+
+function matchRoute(
+  reqMethod: string,
+  reqUrl: string,
+  routeMethod: string,
+  routePath: string,
+): { params: Record<string, string> } | null {
+  if (reqMethod.toUpperCase() !== routeMethod.toUpperCase()) return null;
+
+  const reqParts = reqUrl.split('?')[0]!.split('/').filter(Boolean);
+  const routeParts = routePath.split('/').filter(Boolean);
+
+  if (routeParts.some((p) => p === '*')) {
+    // Wildcard route — match prefix
+    const wildIdx = routeParts.indexOf('*');
+    const prefix = routeParts.slice(0, wildIdx);
+    if (reqParts.length < prefix.length) return null;
+    for (let i = 0; i < prefix.length; i++) {
+      if (prefix[i] !== reqParts[i]) return null;
+    }
+    return { params: {} };
+  }
+
+  if (reqParts.length !== routeParts.length) return null;
+
+  const params: Record<string, string> = {};
+  for (let i = 0; i < routeParts.length; i++) {
+    const rp = routeParts[i]!;
+    const rq = reqParts[i]!;
+    if (rp.startsWith(':')) {
+      params[rp.slice(1)] = rq;
+    } else if (rp !== rq) {
+      return null;
+    }
+  }
+
+  return { params };
+}
+
 function erpPlugin() {
   return {
     name: 'erp-plugin',
-    configureServer(server: any) {
+    configureServer(server: import('vite').ViteDevServer) {
       // --- Startup: init DB, scan modules, install, migrate, seed ---
       server.httpServer?.once('listening', async () => {
         try {
@@ -16,7 +63,7 @@ function erpPlugin() {
 
           const knex = initConnection({
             host: process.env.DB_HOST ?? 'localhost',
-            port: parseInt(process.env.DB_PORT ?? '5432'),
+            port: parseInt(process.env.DB_PORT ?? '5432', 10),
             database: process.env.DB_DATABASE ?? 'agent_erp',
             user: process.env.DB_USER ?? 'postgres',
             password: process.env.DB_PASSWORD ?? 'admin',
@@ -33,7 +80,7 @@ function erpPlugin() {
             loadIndex: async (modulePath: string) => server.ssrLoadModule(path.join(modulePath, 'index.ts')),
           };
 
-          const moduleNames = await scanModules({ modulesPath }, loader);
+          await scanModules({ modulesPath }, loader);
 
           const order = getModuleRegistry().resolveDependencies();
           await installModules(order);
@@ -84,11 +131,12 @@ function erpPlugin() {
               .where({ user_id: user.id })
               .select('group_id');
 
-            const token = signToken({ userId: user.id, groups: groupRows.map((r: any) => String(r.group_id)) });
+            const groups = groupRows.map((r: { group_id: unknown }) => String(r.group_id));
+            const token = signToken({ userId: user.id, groups });
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
               token,
-              user: { id: user.id, name: user.name, groups: groupRows.map((r: any) => String(r.group_id)) },
+              user: { id: user.id, name: user.name, groups },
             }));
           } catch (err) {
             console.error('auth error:', err);
@@ -114,7 +162,9 @@ function erpPlugin() {
           for (const [, modDef] of registry.getAll()) {
             if (!modDef.installed) continue;
             for (const Ctrl of modDef.controllers) {
-              const { routes } = (Ctrl as any);
+              const { routes } = (Ctrl as unknown as {
+                routes?: Array<{ path: string; method: string; handler: string }>;
+              });
               if (!routes) continue;
               for (const route of routes) {
                 const match = matchRoute(method, url, route.method, route.path);
@@ -169,53 +219,6 @@ function erpPlugin() {
       });
     },
   };
-}
-
-function matchRoute(
-  reqMethod: string,
-  reqUrl: string,
-  routeMethod: string,
-  routePath: string,
-): { params: Record<string, string> } | null {
-  if (reqMethod.toUpperCase() !== routeMethod.toUpperCase()) return null;
-
-  const reqParts = reqUrl.split('?')[0]!.split('/').filter(Boolean);
-  const routeParts = routePath.split('/').filter(Boolean);
-
-  if (routeParts.some((p) => p === '*')) {
-    // Wildcard route — match prefix
-    const wildIdx = routeParts.indexOf('*');
-    const prefix = routeParts.slice(0, wildIdx);
-    if (reqParts.length < prefix.length) return null;
-    for (let i = 0; i < prefix.length; i++) {
-      if (prefix[i] !== reqParts[i]) return null;
-    }
-    return { params: {} };
-  }
-
-  if (reqParts.length !== routeParts.length) return null;
-
-  const params: Record<string, string> = {};
-  for (let i = 0; i < routeParts.length; i++) {
-    const rp = routeParts[i]!;
-    const rq = reqParts[i]!;
-    if (rp.startsWith(':')) {
-      params[rp.slice(1)] = rq;
-    } else if (rp !== rq) {
-      return null;
-    }
-  }
-
-  return { params };
-}
-
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
-    req.on('end', () => resolve(body));
-    req.on('error', reject);
-  });
 }
 
 export default defineConfig({

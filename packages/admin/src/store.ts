@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { MenuItem, ViewSpec, AppState, BreadcrumbItem } from './types';
+import type { MenuItem, AppState, BreadcrumbItem } from './types';
 
 export type { MenuItem, ViewSpec, ViewField, ViewLayout, ViewLayoutItem, BreadcrumbItem } from './types';
 
@@ -13,7 +13,8 @@ export function computeBreadcrumbs(
   let currentId: string | undefined = activeMenuId;
 
   while (currentId) {
-    const item = menuItems.find((m) => m.id === currentId);
+    const id = currentId;
+    const item = menuItems.find((m) => m.id === id);
     if (!item) break;
     breadcrumbs.unshift({ id: item.id, name: item.name });
     currentId = item.parentId;

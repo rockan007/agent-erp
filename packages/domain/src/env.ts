@@ -73,7 +73,7 @@ class ModelProxy {
   async write(ids: number[], values: Record<string, unknown>): Promise<number> {
     try {
       const query = buildQuery(this.tableName, {});
-      return query.whereIn('id', ids).update(values);
+      return await query.whereIn('id', ids).update(values);
     } catch (err) {
       throw new Error(`Failed to write ${this.modelName}: ${(err as Error).message}`);
     }
@@ -82,7 +82,7 @@ class ModelProxy {
   async unlink(ids: number[]): Promise<number> {
     try {
       const query = buildQuery(this.tableName, {});
-      return query.whereIn('id', ids).del();
+      return await query.whereIn('id', ids).del();
     } catch (err) {
       throw new Error(`Failed to unlink ${this.modelName}: ${(err as Error).message}`);
     }

@@ -27,7 +27,7 @@ test.describe('Login Page', () => {
     await expect(page.locator('.erp-login-error')).toBeVisible({ timeout: 10000 });
   });
 
-  test('logs out and returns to login', async ({ page }) => {
+  test('logs out and returns to login', async ({ page: _page }) => {
     // This test requires a valid user in DB — skip if not set up
     test.skip();
   });

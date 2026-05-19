@@ -3,8 +3,6 @@ import { runMigrations, Migration } from '../migration-runner';
 
 import { initConnection, closeConnection } from '../connection';
 
-type MockFn = ReturnType<typeof vi.fn>;
-
 function createMockKnex() {
   const tables: Record<string, Record<string, unknown>[]> = {};
   let migrationsTableExists = false;

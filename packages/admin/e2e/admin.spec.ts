@@ -51,9 +51,9 @@ const PARTNER_SEARCH = {
 };
 
 // Helper: inject Zustand state in the browser
-async function setState(page: any, state: Record<string, unknown>) {
-  await page.evaluate((s: any) => {
-    const store = (window as any).__STORE__;
+async function setState(page: import('@playwright/test').Page, state: Record<string, unknown>) {
+  await page.evaluate((s: Record<string, unknown>) => {
+    const store = (window as unknown as { __STORE__: { setState: (v: unknown) => void } }).__STORE__;
     store.setState(s);
   }, state);
 }
@@ -104,7 +104,8 @@ test.describe('Menu', () => {
     await page.locator('.ant-menu-submenu-title:has-text("Contacts")').click();
     await page.locator('.ant-menu-item:has-text("Partners")').click();
 
-    const activeMenuId = await page.evaluate(() => (window as any).__STORE__.getState().activeMenuId);
+    const activeMenuId: string | null = await page.evaluate(() =>
+      (window as unknown as { __STORE__: { getState: () => { activeMenuId: string | null } } }).__STORE__.getState().activeMenuId);
     expect(activeMenuId).toBe('partner_menu');
   });
 });
@@ -244,6 +245,7 @@ test.describe('Placeholder Views', () => {
       activeView: {
         id: 'bad.test',
         model: 'res.partner',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         type: 'unknown_type' as any,
         title: 'Bad View',
         fields: [],
@@ -287,7 +289,8 @@ test.describe('Collapsed Sider', () => {
 
   test('clicking collapse button toggles sider', async ({ page }) => {
     await page.locator('.ant-layout-header button').first().click();
-    const collapsed = await page.evaluate(() => (window as any).__STORE__.getState().siderCollapsed);
+    const collapsed: boolean = await page.evaluate(() =>
+      (window as unknown as { __STORE__: { getState: () => { siderCollapsed: boolean } } }).__STORE__.getState().siderCollapsed);
     expect(collapsed).toBe(true);
   });
 

@@ -19,13 +19,17 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidUpdate(prevProps: { children: React.ReactNode }) {
-    if (prevProps.children !== this.props.children && this.state.hasError) {
+    const { children } = this.props;
+    const { hasError } = this.state;
+    if (prevProps.children !== children && hasError) {
       this.setState({ hasError: false });
     }
   }
 
   render() {
-    if (this.state.hasError) {
+    const { hasError } = this.state;
+    const { children } = this.props;
+    if (hasError) {
       return (
         <Result
           status="error"
@@ -38,6 +42,6 @@ export class ErrorBoundary extends Component<
         />
       );
     }
-    return this.props.children;
+    return children;
   }
 }

@@ -51,6 +51,8 @@ export function buildWhereClause(
       case 'not in':
         builder.whereNotIn(field, value as readonly (string | number)[]);
         break;
+      default:
+        break;
     }
   }
   return builder;

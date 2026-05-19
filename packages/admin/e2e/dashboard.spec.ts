@@ -1,15 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test.describe('Dashboard', () => {
-  test('shows greeting after login', async ({ page }) => {
+  test('shows greeting after login', async ({ page: _page }) => {
     test.skip();
   });
 
-  test('renders stat cards', async ({ page }) => {
+  test('renders stat cards', async ({ page: _page }) => {
     test.skip();
   });
 
-  test('renders quick action pills', async ({ page }) => {
+  test('renders quick action pills', async ({ page: _page }) => {
     test.skip();
   });
 });
