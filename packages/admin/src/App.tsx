@@ -98,7 +98,11 @@ const WelcomeScreen: React.FC = () => {
             >
               <div className="erp-stat-label">{card.label}</div>
               <div className="erp-stat-value">{card.value}</div>
-              <div className="erp-stat-change">{card.change} vs 上月</div>
+              <div className="erp-stat-change">
+                {card.change}
+                {' '}
+                vs 上月
+              </div>
             </motion.div>
           ))}
         </motion.div>
@@ -115,7 +119,10 @@ const WelcomeScreen: React.FC = () => {
                     className="erp-chart-bar"
                     style={{ height: `${h}%` }}
                   />
-                  <span className="erp-chart-label">{i + 1}月</span>
+                  <span className="erp-chart-label">
+                    {i + 1}
+                    月
+                  </span>
                 </div>
               ))}
             </div>
@@ -195,7 +202,6 @@ const App: React.FC = () => {
       onItemClick={isMobile ? () => setSiderCollapsed(true) : undefined}
     />
   );
-
 
   return (
     <Layout className="h-screen">

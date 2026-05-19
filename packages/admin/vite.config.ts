@@ -12,8 +12,7 @@ function erpPlugin() {
         try {
           const { initConnection } = await server.ssrLoadModule('@erp/data');
           const { diffAndMigrate } = await server.ssrLoadModule('@erp/domain');
-          const { scanModules, installModules, runModuleSeeds, getModuleRegistry } =
-            await server.ssrLoadModule('@erp/core');
+          const { scanModules, installModules, runModuleSeeds, getModuleRegistry } = await server.ssrLoadModule('@erp/core');
 
           const knex = initConnection({
             host: process.env.DB_HOST ?? 'localhost',
@@ -31,9 +30,7 @@ function erpPlugin() {
               const m = await server.ssrLoadModule(path.join(modulePath, 'manifest.ts'));
               return m.default;
             },
-            loadIndex: async (modulePath: string) => {
-              return server.ssrLoadModule(path.join(modulePath, 'index.ts'));
-            },
+            loadIndex: async (modulePath: string) => server.ssrLoadModule(path.join(modulePath, 'index.ts')),
           };
 
           const moduleNames = await scanModules({ modulesPath }, loader);
@@ -117,7 +114,7 @@ function erpPlugin() {
           for (const [, modDef] of registry.getAll()) {
             if (!modDef.installed) continue;
             for (const Ctrl of modDef.controllers) {
-              const routes = (Ctrl as any).routes;
+              const { routes } = (Ctrl as any);
               if (!routes) continue;
               for (const route of routes) {
                 const match = matchRoute(method, url, route.method, route.path);
@@ -125,7 +122,7 @@ function erpPlugin() {
 
                 // Extract JWT and get uid
                 let uid = 0;
-                const authHeader = req.headers['authorization'];
+                const authHeader = req.headers.authorization;
                 if (authHeader && authHeader.startsWith('Bearer ')) {
                   const token = authHeader.slice(7);
                   try {
@@ -185,7 +182,7 @@ function matchRoute(
   const reqParts = reqUrl.split('?')[0]!.split('/').filter(Boolean);
   const routeParts = routePath.split('/').filter(Boolean);
 
-  if (routeParts.some(p => p === '*')) {
+  if (routeParts.some((p) => p === '*')) {
     // Wildcard route — match prefix
     const wildIdx = routeParts.indexOf('*');
     const prefix = routeParts.slice(0, wildIdx);

@@ -12,7 +12,7 @@ describe('api decorators', () => {
     }
 
     const computes = Reflect.getMetadata('computes', Test.prototype) as Record<string, unknown>;
-    expect(computes['total']).toEqual({ depends: ['price', 'qty'] });
+    expect(computes.total).toEqual({ depends: ['price', 'qty'] });
   });
 
   it('constrains should store metadata', () => {
@@ -22,7 +22,7 @@ describe('api decorators', () => {
     }
 
     const constraints = Reflect.getMetadata('constraints', Test.prototype) as Record<string, unknown>;
-    expect(constraints['check']).toEqual({ message: 'Invalid value' });
+    expect(constraints.check).toEqual({ message: 'Invalid value' });
   });
 
   it('onchange should store field list', () => {
@@ -32,6 +32,6 @@ describe('api decorators', () => {
     }
 
     const onchanges = Reflect.getMetadata('onchanges', Test.prototype) as Record<string, string[]>;
-    expect(onchanges['onPartnerChange']).toEqual(['partner_id']);
+    expect(onchanges.onPartnerChange).toEqual(['partner_id']);
   });
 });

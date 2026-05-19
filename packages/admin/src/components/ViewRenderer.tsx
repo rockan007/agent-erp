@@ -27,17 +27,15 @@ function renderView(view: ViewSpec): React.ReactNode {
   }
 }
 
-export const ViewRenderer: React.FC<Props> = ({ view }) => {
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={view.id}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.15 }}
-      >
-        {renderView(view)}
-      </motion.div>
-    </AnimatePresence>
-  );
-};
+export const ViewRenderer: React.FC<Props> = ({ view }) => (
+  <AnimatePresence mode="wait">
+    <motion.div
+      key={view.id}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15 }}
+    >
+      {renderView(view)}
+    </motion.div>
+  </AnimatePresence>
+);

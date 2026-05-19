@@ -10,8 +10,8 @@ interface Props {
 
 function isTupleArray(v: unknown): v is [string, string][] {
   return Array.isArray(v) && v.every(
-    (item) => Array.isArray(item) && item.length === 2 &&
-      typeof item[0] === 'string' && typeof item[1] === 'string',
+    (item) => Array.isArray(item) && item.length === 2
+      && typeof item[0] === 'string' && typeof item[1] === 'string',
   );
 }
 

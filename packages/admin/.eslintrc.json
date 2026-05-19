@@ -1,8 +1,8 @@
 {
   "extends": [
-    "../../.eslintrc.json",
     "airbnb",
-    "airbnb-typescript"
+    "airbnb-typescript",
+    "../../.eslintrc.json"
   ],
   "parserOptions": {
     "project": "./tsconfig.json"
@@ -10,12 +10,16 @@
   "rules": {
     "no-underscore-dangle": "off",
     "object-curly-newline": "off",
+    "max-len": "off",
     "react/react-in-jsx-scope": "off",
     "react/jsx-filename-extension": ["error", { "extensions": [".tsx"] }],
     "react/require-default-props": "off",
+    "react/no-array-index-key": "off",
+    "react/sort-comp": "off",
     "react/function-component-definition": ["error", {
       "namedComponents": "arrow-function",
       "unnamedComponents": "arrow-function"
-    }]
+    }],
+    "jsx-a11y/control-has-associated-label": "off"
   }
 }

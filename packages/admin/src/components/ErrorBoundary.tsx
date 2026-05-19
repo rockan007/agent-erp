@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { Result, Button } from 'antd';
 
 export class ErrorBoundary extends Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
+{ children: React.ReactNode },
+{ hasError: boolean }
 > {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -30,11 +30,11 @@ export class ErrorBoundary extends Component<
         <Result
           status="error"
           title="Something went wrong rendering this view."
-          extra={
+          extra={(
             <Button type="primary" onClick={() => this.setState({ hasError: false })}>
               Retry
             </Button>
-          }
+          )}
         />
       );
     }

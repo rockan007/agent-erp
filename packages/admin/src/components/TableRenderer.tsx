@@ -39,7 +39,7 @@ export const TableRenderer: React.FC<Props> = ({ view }) => {
             <div className="text-sm font-medium text-[#6b726e]">No records found</div>
             <div className="text-xs text-[#9e9890] mt-1">Create your first record to get started</div>
           </div>
-        )}}
+        ) }}
         size="middle"
         scroll={!screens.md ? { x: 'max-content' } : undefined}
         pagination={false}

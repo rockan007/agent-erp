@@ -3,20 +3,20 @@ export type MaskPattern = 'phone' | 'email' | 'id_card';
 const maskers: Record<MaskPattern, (value: string) => string> = {
   phone: (v) => {
     if (v.length < 7) return v;
-    return v.slice(0, 3) + '****' + v.slice(-4);
+    return `${v.slice(0, 3)  }****${  v.slice(-4)}`;
   },
   email: (v) => {
     const [local, domain] = v.split('@');
     if (!domain) return v;
     const masked =
       local!.length > 2
-        ? local![0] + '***' + local![local!.length - 1]
+        ? `${local![0]  }***${  local![local!.length - 1]}`
         : local!;
-    return masked + '@' + domain;
+    return `${masked  }@${  domain}`;
   },
   id_card: (v) => {
     if (v.length < 8) return v;
-    return v.slice(0, 4) + '**********' + v.slice(-4);
+    return `${v.slice(0, 4)  }**********${  v.slice(-4)}`;
   },
 };
 

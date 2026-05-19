@@ -3,6 +3,7 @@ import type { BaseModel } from './model';
 
 export class ModelRegistry {
   private models = new Map<string, ModelDefinition>();
+
   private classes = new Map<string, typeof BaseModel>();
 
   register(modelClass: typeof BaseModel): void {

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { runMigrations, Migration } from '../migration-runner';
 
+import { initConnection, closeConnection } from '../connection';
+
 type MockFn = ReturnType<typeof vi.fn>;
 
 function createMockKnex() {
@@ -64,14 +66,10 @@ function createMockKnex() {
     defaultTo: () => ChainableMock;
   }
 
-  const knexFn = ((tableName: string) => {
-    return createQueryBuilder(tableName);
-  }) as unknown as Record<string, unknown> & ((tableName: string) => ReturnType<typeof createQueryBuilder>);
+  const knexFn = ((tableName: string) => createQueryBuilder(tableName)) as unknown as Record<string, unknown> & ((tableName: string) => ReturnType<typeof createQueryBuilder>);
 
   knexFn.schema = {
-    hasTable: vi.fn(async () => {
-      return migrationsTableExists;
-    }),
+    hasTable: vi.fn(async () => migrationsTableExists),
     createTable: vi.fn(async (_name: string, callback: (table: Record<string, unknown>) => void) => {
       const chainable: ChainableMock = {
         string: () => chainable,
@@ -80,7 +78,7 @@ function createMockKnex() {
         defaultTo: () => chainable,
       };
       callback(chainable as unknown as Record<string, unknown>);
-      tables['erp_migrations'] = [];
+      tables.erp_migrations = [];
       migrationsTableExists = true;
     }),
   };
@@ -112,8 +110,6 @@ vi.mock('../connection', () => {
     },
   };
 });
-
-import { initConnection, closeConnection } from '../connection';
 
 describe('migration-runner', () => {
   beforeEach(() => {

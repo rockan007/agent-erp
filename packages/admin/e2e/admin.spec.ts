@@ -104,9 +104,7 @@ test.describe('Menu', () => {
     await page.locator('.ant-menu-submenu-title:has-text("Contacts")').click();
     await page.locator('.ant-menu-item:has-text("Partners")').click();
 
-    const activeMenuId = await page.evaluate(() => {
-      return (window as any).__STORE__.getState().activeMenuId;
-    });
+    const activeMenuId = await page.evaluate(() => (window as any).__STORE__.getState().activeMenuId);
     expect(activeMenuId).toBe('partner_menu');
   });
 });
@@ -212,8 +210,11 @@ test.describe('Placeholder Views', () => {
     await setState(page, {
       menuItems: MENU_ITEMS,
       activeView: {
-        id: 'kanban.test', model: 'res.partner', type: 'kanban',
-        title: 'Kanban Test', fields: [],
+        id: 'kanban.test',
+        model: 'res.partner',
+        type: 'kanban',
+        title: 'Kanban Test',
+        fields: [],
       },
     });
     await expect(page.locator('text=Kanban View')).toBeVisible();
@@ -225,8 +226,11 @@ test.describe('Placeholder Views', () => {
     await setState(page, {
       menuItems: MENU_ITEMS,
       activeView: {
-        id: 'cal.test', model: 'res.partner', type: 'calendar',
-        title: 'Calendar Test', fields: [],
+        id: 'cal.test',
+        model: 'res.partner',
+        type: 'calendar',
+        title: 'Calendar Test',
+        fields: [],
       },
     });
     await expect(page.locator('text=Calendar View')).toBeVisible();
@@ -238,8 +242,11 @@ test.describe('Placeholder Views', () => {
     await setState(page, {
       menuItems: MENU_ITEMS,
       activeView: {
-        id: 'bad.test', model: 'res.partner', type: 'unknown_type' as any,
-        title: 'Bad View', fields: [],
+        id: 'bad.test',
+        model: 'res.partner',
+        type: 'unknown_type' as any,
+        title: 'Bad View',
+        fields: [],
       },
     });
     await expect(page.locator('text=Unknown View Type')).toBeVisible();
@@ -280,9 +287,7 @@ test.describe('Collapsed Sider', () => {
 
   test('clicking collapse button toggles sider', async ({ page }) => {
     await page.locator('.ant-layout-header button').first().click();
-    const collapsed = await page.evaluate(() =>
-      (window as any).__STORE__.getState().siderCollapsed
-    );
+    const collapsed = await page.evaluate(() => (window as any).__STORE__.getState().siderCollapsed);
     expect(collapsed).toBe(true);
   });
 

@@ -60,8 +60,7 @@ const LoginPage: React.FC = () => {
         animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : { opacity: 1, y: 0 }}
         transition={shake
           ? { duration: 0.4 }
-          : { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
-        }
+          : { duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
       >
         <h2 className="erp-login-title">欢迎登录</h2>
         <p className="erp-login-subtitle">请输入您的账号信息</p>

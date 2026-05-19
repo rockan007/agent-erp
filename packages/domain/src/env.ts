@@ -31,7 +31,9 @@ export class Env {
 
 class ModelProxy {
   private modelName: string;
+
   private definition: ModelDefinition;
+
   private context: EnvContext;
 
   constructor(modelName: string, definition: ModelDefinition, context: EnvContext) {

@@ -30,6 +30,7 @@ export interface ModuleDefinition {
 
 export class ModuleRegistry {
   private modules = new Map<string, ModuleDefinition>();
+
   private installOrder: string[] = [];
 
   register(module: ModuleDefinition): void {

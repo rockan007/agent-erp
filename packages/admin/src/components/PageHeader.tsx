@@ -11,10 +11,9 @@ interface Props {
 export const PageHeader: React.FC<Props> = ({ view }) => {
   const breadcrumbs = useStore((s) => s.breadcrumbs);
 
-  const breadcrumbItems =
-    breadcrumbs.length > 0
-      ? breadcrumbs.map((b) => ({ title: b.name }))
-      : [{ title: 'Home' }];
+  const breadcrumbItems = breadcrumbs.length > 0
+    ? breadcrumbs.map((b) => ({ title: b.name }))
+    : [{ title: 'Home' }];
 
   return (
     <div className="erp-page-header px-6 py-3">
