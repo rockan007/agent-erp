@@ -1,3 +1,5 @@
+export type AuthView = 'login' | 'register' | 'verify-registration' | 'forgot-password' | 'reset-password';
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -58,6 +60,12 @@ export interface AppState {
   setBreadcrumbs: (breadcrumbs: BreadcrumbItem[]) => void;
 
   initializeAuth: () => void;
+  authView: AuthView;
+  setAuthView: (view: AuthView) => void;
   login: (login: string, password: string) => Promise<void>;
   logout: () => void;
+  register: (data: { name: string; login: string; password: string; email: string }) => Promise<{ userId: number; message: string }>;
+  verifyRegistration: (userId: number, code: string) => Promise<{ message: string }>;
+  forgotPassword: (email: string) => Promise<{ message: string }>;
+  resetPassword: (userId: number, code: string, password: string) => Promise<{ message: string }>;
 }

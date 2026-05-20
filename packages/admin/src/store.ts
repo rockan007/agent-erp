@@ -31,6 +31,7 @@ export const useStore = create<AppState>((set, get) => ({
   token: null,
   siderCollapsed: true,
   breadcrumbs: [],
+  authView: 'login',
 
   setMenuItems: (items) => {
     const { activeMenuId } = get();
@@ -44,6 +45,7 @@ export const useStore = create<AppState>((set, get) => ({
   setUser: (user) => set({ user }),
   setSiderCollapsed: (collapsed) => set({ siderCollapsed: collapsed }),
   setBreadcrumbs: (breadcrumbs) => set({ breadcrumbs }),
+  setAuthView: (view) => set({ authView: view }),
 
   initializeAuth: () => {
     const token = localStorage.getItem('erp_token');
@@ -79,6 +81,50 @@ export const useStore = create<AppState>((set, get) => ({
     localStorage.removeItem('erp_token');
     localStorage.removeItem('erp_user');
     set({ token: null, user: null, activeView: null });
+  },
+
+  register: async (data) => {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? 'Registration failed');
+    return json;
+  },
+
+  verifyRegistration: async (userId, code) => {
+    const res = await fetch('/api/auth/verify-registration', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, code }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? 'Verification failed');
+    return json;
+  },
+
+  forgotPassword: async (email) => {
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? 'Request failed');
+    return json;
+  },
+
+  resetPassword: async (userId, code, password) => {
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, code, password }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? 'Reset failed');
+    return json;
   },
 }));
 
