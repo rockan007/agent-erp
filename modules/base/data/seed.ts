@@ -2,6 +2,20 @@ import type { Knex } from 'knex';
 import { hashPassword } from '@erp/core';
 
 export default async function seed(knex: Knex): Promise<void> {
+  // Create verification codes table if not exists
+  const hasTable = await knex.schema.hasTable('erp_verification_codes');
+  if (!hasTable) {
+    await knex.schema.createTable('erp_verification_codes', (t) => {
+      t.increments('id').primary();
+      t.integer('user_id').notNullable().references('id').inTable('res_users').onDelete('CASCADE');
+      t.string('code', 6).notNullable();
+      t.string('type', 20).notNullable();
+      t.timestamp('expires_at', { useTz: true }).notNullable();
+      t.boolean('used').defaultTo(false);
+      t.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
+    });
+  }
+
   // Insert groups (idempotent)
   const existingAdmin = await knex('res_groups').where({ name: 'admin' }).first();
   if (!existingAdmin) {
