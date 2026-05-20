@@ -6,6 +6,7 @@ import { useStore } from '../store';
 
 const LoginPage: React.FC = () => {
   const login = useStore((s) => s.login);
+  const setAuthView = useStore((s) => s.setAuthView);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
@@ -105,6 +106,23 @@ const LoginPage: React.FC = () => {
               登 录
             </Button>
           </Form.Item>
+
+          <div className="erp-login-links">
+            <button
+              type="button"
+              className="erp-login-link"
+              onClick={() => setAuthView('register')}
+            >
+              Create account
+            </button>
+            <button
+              type="button"
+              className="erp-login-link erp-login-link-muted"
+              onClick={() => setAuthView('forgot-password')}
+            >
+              Forgot password?
+            </button>
+          </div>
         </Form>
       </motion.div>
     </div>
