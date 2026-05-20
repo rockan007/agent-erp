@@ -13,12 +13,13 @@ import { baseMenus } from './views/menus';
 import { PartnerController } from './controllers/partner_controller';
 import { UserController } from './controllers/user_controller';
 import { GroupController } from './controllers/group_controller';
+import { AuthController } from './controllers/auth_controller';
 import { baseAcl } from './security/acl';
 import seed from './data/seed';
 
 export const models = [ResPartner, ResUsers, ResGroups];
 export const views = [partnerForm, partnerTree, partnerSearch, userForm, userTree, userSearch, groupForm, groupTree];
 export const menus = baseMenus;
-export const controllers = [PartnerController, UserController, GroupController];
+export const controllers = [PartnerController, UserController, GroupController, AuthController];
 export const security = baseAcl;
 export const data = [seed];
