@@ -9,6 +9,8 @@ import { PageHeader } from './components/PageHeader';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useStore } from './store';
 import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
 
 const { Sider, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -195,7 +197,20 @@ const App: React.FC = () => {
   const screens = useBreakpoint();
   const isMobile = screens.md === false;
 
-  if (!user) return <LoginPage />;
+  const authView = useStore((s) => s.authView);
+
+  if (!user) {
+    switch (authView) {
+      case 'register':
+      case 'verify-registration':
+        return <RegisterPage />;
+      case 'forgot-password':
+      case 'reset-password':
+        return <ForgotPasswordPage />;
+      default:
+        return <LoginPage />;
+    }
+  }
 
   const sidebarContent = (
     <MenuRenderer
