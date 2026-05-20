@@ -4,7 +4,7 @@ import type { Knex } from 'knex';
 const CODE_EXPIRY_MINUTES = 10;
 
 export function generateCode(): string {
-  return crypto.randomInt(100000, 999999).toString();
+  return crypto.randomInt(100000, 1000000).toString();
 }
 
 export async function storeCode(
@@ -39,17 +39,13 @@ export async function verifyCode(
 ): Promise<boolean> {
   await cleanupExpiredCodes(db);
 
-  const record = await db('erp_verification_codes')
+  const [result] = await db('erp_verification_codes')
     .where({ user_id: userId, code, type, used: false })
-    .whereRaw("expires_at > NOW()")
+    .whereRaw('expires_at > NOW()')
     .orderBy('id', 'desc')
-    .first();
+    .limit(1)
+    .update({ used: true })
+    .returning('id');
 
-  if (!record) return false;
-
-  await db('erp_verification_codes')
-    .where({ id: record.id })
-    .update({ used: true });
-
-  return true;
+  return result !== undefined;
 }

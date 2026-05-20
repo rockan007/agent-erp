@@ -10,10 +10,13 @@ function mockKnex(): Knex {
     where: vi.fn().mockReturnThis(),
     whereRaw: vi.fn().mockReturnThis(),
     first: vi.fn().mockResolvedValue(null),
-    update: vi.fn().mockResolvedValue(1),
+    update: vi.fn().mockReturnValue({
+      returning: vi.fn().mockResolvedValue([]),
+    }),
     delete: vi.fn().mockResolvedValue(1),
     andWhere: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
   };
 
@@ -63,14 +66,9 @@ describe('verifyCode', () => {
   it('returns true for valid code', async () => {
     const db = mockKnex();
     const code = '123456';
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    (db.first as ReturnType<typeof vi.fn>).mockResolvedValue({
-      id: 1,
-      user_id: 1,
-      code,
-      type: 'register',
-      expires_at: expiresAt,
-      used: false,
+
+    (db.update as ReturnType<typeof vi.fn>).mockReturnValue({
+      returning: vi.fn().mockResolvedValue([{ id: 1 }]),
     });
 
     const result = await verifyCode(db, 1, code, 'register');
@@ -82,8 +80,7 @@ describe('verifyCode', () => {
     const db = mockKnex();
     // Record exists in DB but expires_at is in the past,
     // so the SQL whereRaw("expires_at > NOW()") filters it out.
-    // Mock first() returns null to simulate that SQL filtering.
-    (db.first as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    // The atomic UPDATE affects 0 rows, so returning('id') yields [].
 
     const result = await verifyCode(db, 1, '123456', 'register');
     expect(result).toBe(false);
@@ -93,8 +90,7 @@ describe('verifyCode', () => {
     const db = mockKnex();
     // Record exists in DB but used=true, so the SQL
     // where({ used: false }) filters it out.
-    // Mock first() returns null to simulate that SQL filtering.
-    (db.first as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    // The atomic UPDATE affects 0 rows, so returning('id') yields [].
 
     const result = await verifyCode(db, 1, '123456', 'register');
     expect(result).toBe(false);
@@ -102,7 +98,8 @@ describe('verifyCode', () => {
 
   it('returns false for wrong code', async () => {
     const db = mockKnex();
-    (db.first as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    // The atomic UPDATE affects 0 rows because no matching code,
+    // so returning('id') yields [].
 
     const result = await verifyCode(db, 1, '000000', 'register');
     expect(result).toBe(false);
