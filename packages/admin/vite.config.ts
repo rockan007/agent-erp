@@ -100,54 +100,6 @@ function erpPlugin() {
         }
       });
 
-      // --- Auth middleware ---
-      server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-        if (req.method === 'POST' && req.url === '/api/auth/login') {
-          const body = await readBody(req);
-          try {
-            const { login, password } = JSON.parse(body);
-            const { getKnex } = await server.ssrLoadModule('@erp/data');
-            const { verifyPassword, signToken } = await server.ssrLoadModule('@erp/core');
-
-            const knex = getKnex();
-            const user = await knex('res_users')
-              .where({ login, active: true })
-              .first();
-
-            if (!user) {
-              res.writeHead(401, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Invalid credentials' }));
-              return;
-            }
-
-            const valid = await verifyPassword(password, user.password);
-            if (!valid) {
-              res.writeHead(401, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Invalid credentials' }));
-              return;
-            }
-
-            const groupRows = await knex('res_users_groups_rel')
-              .where({ user_id: user.id })
-              .select('group_id');
-
-            const groups = groupRows.map((r: { group_id: unknown }) => String(r.group_id));
-            const token = signToken({ userId: user.id, groups });
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-              token,
-              user: { id: user.id, name: user.name, groups },
-            }));
-          } catch (err) {
-            console.error('auth error:', err);
-            res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Invalid credentials' }));
-          }
-        } else {
-          next();
-        }
-      });
-
       // --- Generic controller route registrar ---
       server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
         const { method, url } = req;
