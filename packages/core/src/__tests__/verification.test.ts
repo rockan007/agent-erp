@@ -29,6 +29,13 @@ function mockKnex(): Knex {
   // db('erp_verification_codes') returns the chain
   const db = vi.fn().mockReturnValue(chain);
 
+  // Transaction: runs the callback with a trx that is also callable like db
+  const trx = vi.fn().mockReturnValue(chain);
+  Object.assign(trx, chain, { commit: vi.fn(), rollback: vi.fn() });
+  chain.transaction = vi.fn().mockImplementation(
+    (cb: (trx: unknown) => Promise<void>) => cb(trx),
+  );
+
   // Attach chain methods directly to db so mock assertions work on db directly
   Object.assign(db, chain);
   (db as Record<string, unknown>)._rows = rows;

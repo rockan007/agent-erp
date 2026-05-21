@@ -15,11 +15,17 @@ export async function storeCode(
   const code = generateCode();
   const expiresAt = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000);
 
-  await db('erp_verification_codes').insert({
-    user_id: userId,
-    code,
-    type,
-    expires_at: expiresAt,
+  await db.transaction(async (trx) => {
+    await trx('erp_verification_codes')
+      .where({ user_id: userId, type, used: false })
+      .update({ used: true });
+
+    await trx('erp_verification_codes').insert({
+      user_id: userId,
+      code,
+      type,
+      expires_at: expiresAt,
+    });
   });
 
   return code;
