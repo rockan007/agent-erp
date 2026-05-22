@@ -18,6 +18,9 @@ export interface FieldDefinition {
   store?: boolean;
   compute?: (record: Record<string, unknown>) => unknown;
   depends?: string[];
+  table?: string;
+  column1?: string;
+  column2?: string;
 }
 
 export interface ModelDefinition {

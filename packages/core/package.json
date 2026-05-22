@@ -12,6 +12,7 @@
   "dependencies": {
     "@erp/data": "workspace:*",
     "@erp/domain": "workspace:*",
+    "knex": "^3.1.0",
     "bcrypt": "^6.0.0",
     "crypto-js": "^4.2.0",
     "i18next": "^26.2.0",

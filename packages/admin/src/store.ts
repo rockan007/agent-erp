@@ -13,8 +13,8 @@ export function computeBreadcrumbs(
   let currentId: string | undefined = activeMenuId;
 
   while (currentId) {
-    const id = currentId;
-    const item = menuItems.find((m) => m.id === id);
+    const id: string = currentId;
+    const item: MenuItem | undefined = menuItems.find((m) => m.id === id);
     if (!item) break;
     breadcrumbs.unshift({ id: item.id, name: item.name });
     currentId = item.parentId;

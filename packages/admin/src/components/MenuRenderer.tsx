@@ -88,6 +88,7 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
   const menuItems = useStore((s) => s.menuItems);
   const activeMenuId = useStore((s) => s.activeMenuId);
   const selectMenu = useStore((s) => s.selectMenu);
+  const siderCollapsed = useStore((s) => s.siderCollapsed);
 
   const tree = buildTree(menuItems);
   const antdItems = toAntdItems(tree);
@@ -101,16 +102,22 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
   }, [menuItems]);
 
   const [openKeys, setOpenKeys] = useState<string[]>([]);
+  // Key to force remount of Menu in collapsed mode (closes popup portals)
+  const [menuKey, setMenuKey] = useState(0);
 
   const onOpenChange: MenuProps['onOpenChange'] = (keys) => {
     setOpenKeys(keys);
   };
 
   const onClick: MenuProps['onClick'] = ({ key }) => {
+    // Parent item: let antd handle expand/collapse, no navigation
+    if (parentKeys.has(key)) return;
+
     selectMenu(key);
-    // Close popup when clicking a leaf item (not a parent menu)
-    if (!parentKeys.has(key)) {
-      setOpenKeys([]);
+    const clickedItem = menuItems.find((m) => m.id === key);
+    setOpenKeys(clickedItem?.parentId ? [clickedItem.parentId] : []);
+    if (siderCollapsed) {
+      setMenuKey((k) => k + 1);
     }
     onItemClick?.();
   };
@@ -129,6 +136,7 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
 
   return (
     <Menu
+      key={menuKey}
       theme="light"
       mode="inline"
       selectedKeys={activeMenuId ? [activeMenuId] : []}

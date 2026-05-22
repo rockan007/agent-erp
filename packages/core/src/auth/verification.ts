@@ -15,7 +15,7 @@ export async function storeCode(
   const code = generateCode();
   const expiresAt = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000);
 
-  await db.transaction(async (trx) => {
+  await db.transaction(async (trx: Knex.Transaction) => {
     await trx('erp_verification_codes')
       .where({ user_id: userId, type, used: false })
       .update({ used: true });

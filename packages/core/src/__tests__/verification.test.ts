@@ -38,8 +38,8 @@ function mockKnex(): Knex {
 
   // Attach chain methods directly to db so mock assertions work on db directly
   Object.assign(db, chain);
-  (db as Record<string, unknown>)._rows = rows;
-  (db as Record<string, unknown>)._chain = chain;
+  (db as unknown as Record<string, unknown>)._rows = rows;
+  (db as unknown as Record<string, unknown>)._chain = chain;
 
   return db as unknown as Knex;
 }
