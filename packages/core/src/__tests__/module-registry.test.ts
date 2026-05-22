@@ -19,6 +19,9 @@ describe('ModuleRegistry', () => {
     models: [],
     controllers: [],
     dataFiles: [],
+    views: [],
+    menus: [],
+    security: [],
     installed: false,
   });
 

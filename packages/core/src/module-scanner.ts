@@ -1,6 +1,8 @@
 import { readdirSync, existsSync, lstatSync } from 'fs';
 import { join, resolve } from 'path';
 import { getModuleRegistry, ModuleManifest, ModuleDefinition } from './module-registry';
+import type { AclRule } from './security/acl';
+import type { ModuleMenuItem, ModuleViewSpec } from './module-registry';
 
 export interface ScanOptions {
   modulesPath: string;
@@ -47,6 +49,9 @@ export interface ModuleLoader {
     models?: Record<string, unknown>[];
     controllers?: Record<string, unknown>[];
     data?: ((knex: Record<string, unknown>) => Promise<void>)[];
+    views?: ModuleViewSpec[];
+    menus?: ModuleMenuItem[];
+    security?: AclRule[];
   }>;
 }
 
@@ -68,6 +73,9 @@ export async function scanModules(options: ScanOptions, loader: ModuleLoader): P
       models: (moduleExports.models ?? []) as unknown as ModuleDefinition['models'],
       controllers: (moduleExports.controllers ?? []) as unknown as ModuleDefinition['controllers'],
       dataFiles: moduleExports.data ?? [],
+      views: moduleExports.views ?? [],
+      menus: moduleExports.menus ?? [],
+      security: moduleExports.security ?? [],
       installed: false,
     };
 

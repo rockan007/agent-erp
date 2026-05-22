@@ -1,4 +1,23 @@
 import type { BaseModel } from '@erp/domain';
+import type { AclRule } from './security/acl';
+
+export interface ModuleMenuItem {
+  id: string;
+  name: string;
+  icon?: string;
+  sequence: number;
+  parentId?: string;
+  action?: string;
+}
+
+export interface ModuleViewSpec {
+  id: string;
+  model: string;
+  type: string;
+  title: string;
+  fields: { name: string; label?: string; widget?: string; readonly?: boolean; required?: boolean; options?: Record<string, unknown> }[];
+  layout?: { type: string; items: { title?: string; fields: string[]; widget?: string }[] };
+}
 
 export interface ModuleManifest {
   name: string;
@@ -25,6 +44,9 @@ export interface ModuleDefinition {
   models: (typeof BaseModel)[];
   controllers: ControllerClass[];
   dataFiles: Array<(knex: Record<string, unknown>) => Promise<void>>;
+  views: ModuleViewSpec[];
+  menus: ModuleMenuItem[];
+  security: AclRule[];
   installed: boolean;
 }
 
