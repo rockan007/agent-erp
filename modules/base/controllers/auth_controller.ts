@@ -34,10 +34,11 @@ export class AuthController {
     }
 
     const groupRows = await knex('res_users_groups_rel')
+      .join('res_groups', 'res_users_groups_rel.group_id', 'res_groups.id')
       .where({ user_id: user.id })
-      .select('group_id');
+      .select('res_groups.name');
 
-    const groups = groupRows.map((r: { group_id: unknown }) => String(r.group_id));
+    const groups = groupRows.map((r: { name: unknown }) => String(r.name));
     const token = signToken({ userId: user.id, groups });
 
     return {
