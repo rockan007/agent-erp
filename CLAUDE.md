@@ -123,6 +123,7 @@ The scanner reads `manifest.ts` for metadata and `index.ts` for the exported arr
 ## Workflow
 
 - **Prefer Subagent-Driven mode** for executing implementation plans. When a plan has multiple tasks, use `superpowers:subagent-driven-development` — it dispatches fresh subagents per task with automated spec + code quality review between tasks. Faster iteration, less context pollution.
+- **Code review must include ESLint check.** Run `pnpm lint` (or the package-specific lint command) as part of every code review. Lint errors are blocking — fix them before merging.
 
 ## Key Conventions
 
