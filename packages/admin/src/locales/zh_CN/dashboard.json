@@ -1,0 +1,31 @@
+{
+  "greeting": {
+    "morning": "早上好, {{name}}",
+    "subtitle": "以下是您的业务概览"
+  },
+  "stats": {
+    "activeUsers": "活跃用户",
+    "partners": "合作伙伴",
+    "monthlyOrders": "本月订单",
+    "revenue": "营收 (K)",
+    "vsLastMonth": "vs 上月"
+  },
+  "chart": {
+    "monthlyTrend": "月度趋势",
+    "month": "月"
+  },
+  "activity": {
+    "recent": "最近动态",
+    "orderCreated": "{{name}} 创建了新订单 #{{id}}",
+    "partnerUpdated": "{{name}} 更新了合作伙伴信息",
+    "reportSubmitted": "{{name}} 提交了月度报表",
+    "backupCompleted": "系统 完成了数据备份"
+  },
+  "actions": {
+    "createOrder": "新建订单",
+    "addPartner": "添加伙伴",
+    "reports": "报表中心",
+    "settings": "系统设置",
+    "import": "导入数据"
+  }
+}

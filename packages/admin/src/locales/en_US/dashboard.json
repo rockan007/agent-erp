@@ -1,0 +1,31 @@
+{
+  "greeting": {
+    "morning": "Good morning, {{name}}",
+    "subtitle": "Here is your business overview"
+  },
+  "stats": {
+    "activeUsers": "Active Users",
+    "partners": "Partners",
+    "monthlyOrders": "Monthly Orders",
+    "revenue": "Revenue (K)",
+    "vsLastMonth": "vs Last Month"
+  },
+  "chart": {
+    "monthlyTrend": "Monthly Trend",
+    "month": "mo"
+  },
+  "activity": {
+    "recent": "Recent Activity",
+    "orderCreated": "{{name}} created new order #{{id}}",
+    "partnerUpdated": "{{name}} updated partner information",
+    "reportSubmitted": "{{name}} submitted monthly report",
+    "backupCompleted": "System completed data backup"
+  },
+  "actions": {
+    "createOrder": "New Order",
+    "addPartner": "Add Partner",
+    "reports": "Reports",
+    "settings": "Settings",
+    "import": "Import Data"
+  }
+}
