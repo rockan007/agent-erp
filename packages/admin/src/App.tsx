@@ -50,7 +50,7 @@ const WelcomeScreen: React.FC = () => {
   const { t } = useTranslation('dashboard');
   const user = useStore((s) => s.user);
   const menuItems = useStore((s) => s.menuItems);
-  const setActiveMenu = useStore((s) => s.setActiveMenu);
+  const selectMenu = useStore((s) => s.selectMenu);
 
   const { t: tc } = useTranslation('common');
   const greeting = t('greeting.morning', { name: user?.name ?? tc('label.guest') });
@@ -176,7 +176,7 @@ const WelcomeScreen: React.FC = () => {
                 <button
                   type="button"
                   key={m.id}
-                  onClick={() => setActiveMenu(m.id)}
+                  onClick={() => selectMenu(m.id)}
                   className="erp-module-chip"
                 >
                   {m.name}

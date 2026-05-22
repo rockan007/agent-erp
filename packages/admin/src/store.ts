@@ -62,6 +62,8 @@ export const useStore = create<AppState>((set, get) => ({
         return;
       }
       const data = await res.json();
+      // Guard against race: user may have logged out during fetch
+      if (!get().token) return;
       set({ menuItems: data.menus, viewsMap: data.views });
     } catch {
       // Server unavailable — user stays on dashboard
