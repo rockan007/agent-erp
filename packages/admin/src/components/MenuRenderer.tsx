@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Menu } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -92,8 +92,26 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
   const tree = buildTree(menuItems);
   const antdItems = toAntdItems(tree);
 
+  const parentKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of menuItems) {
+      if (item.parentId) set.add(item.parentId);
+    }
+    return set;
+  }, [menuItems]);
+
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
+
+  const onOpenChange: MenuProps['onOpenChange'] = (keys) => {
+    setOpenKeys(keys);
+  };
+
   const onClick: MenuProps['onClick'] = ({ key }) => {
     selectMenu(key);
+    // Close popup when clicking a leaf item (not a parent menu)
+    if (!parentKeys.has(key)) {
+      setOpenKeys([]);
+    }
     onItemClick?.();
   };
 
@@ -114,6 +132,8 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
       theme="light"
       mode="inline"
       selectedKeys={activeMenuId ? [activeMenuId] : []}
+      openKeys={openKeys}
+      onOpenChange={onOpenChange}
       items={antdItems}
       onClick={onClick}
       motion={{

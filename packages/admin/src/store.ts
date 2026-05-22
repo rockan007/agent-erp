@@ -29,7 +29,7 @@ export const useStore = create<AppState>((set, get) => ({
   activeView: null,
   user: null,
   token: null,
-  siderCollapsed: true,
+  siderCollapsed: false,
   breadcrumbs: [],
   authView: 'login',
   viewsMap: {},
