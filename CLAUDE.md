@@ -120,6 +120,10 @@ modules/<name>/
 
 The scanner reads `manifest.ts` for metadata and `index.ts` for the exported arrays. Currently only `models` and `controllers` are consumed by `installModules()`; `views`, `menus`, and `security` exports are defined but not yet consumed by the runtime (hookup pending).
 
+## Workflow
+
+- **Prefer Subagent-Driven mode** for executing implementation plans. When a plan has multiple tasks, use `superpowers:subagent-driven-development` — it dispatches fresh subagents per task with automated spec + code quality review between tasks. Faster iteration, less context pollution.
+
 ## Key Conventions
 
 - Table names: `model._table` if set, otherwise `model._name.replace(/\./g, '_')` (e.g. `res.partner` → `res_partner`)
