@@ -19,7 +19,7 @@
     "orderCreated": "{{name}} 创建了新订单 #{{id}}",
     "partnerUpdated": "{{name}} 更新了合作伙伴信息",
     "reportSubmitted": "{{name}} 提交了月度报表",
-    "backupCompleted": "系统 完成了数据备份"
+    "backupCompleted": "系统完成了数据备份"
   },
   "actions": {
     "createOrder": "新建订单",
