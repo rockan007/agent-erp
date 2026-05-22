@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Layout, Drawer, Grid } from 'antd';
 import { useTranslation } from 'react-i18next';
 
@@ -198,7 +198,17 @@ const App: React.FC = () => {
   const screens = useBreakpoint();
   const isMobile = screens.md === false;
 
+  const token = useStore((s) => s.token);
+  const menuItems = useStore((s) => s.menuItems);
+  const fetchMenus = useStore((s) => s.fetchMenus);
+
   const authView = useStore((s) => s.authView);
+
+  useEffect(() => {
+    if (token && menuItems.length === 0) {
+      fetchMenus();
+    }
+  }, [token, menuItems.length, fetchMenus]);
 
   if (!user) {
     switch (authView) {

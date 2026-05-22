@@ -87,13 +87,13 @@ interface Props {
 export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
   const menuItems = useStore((s) => s.menuItems);
   const activeMenuId = useStore((s) => s.activeMenuId);
-  const setActiveMenu = useStore((s) => s.setActiveMenu);
+  const selectMenu = useStore((s) => s.selectMenu);
 
   const tree = buildTree(menuItems);
   const antdItems = toAntdItems(tree);
 
   const onClick: MenuProps['onClick'] = ({ key }) => {
-    setActiveMenu(key);
+    selectMenu(key);
     onItemClick?.();
   };
 
