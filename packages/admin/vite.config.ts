@@ -82,6 +82,15 @@ function erpPlugin() {
 
           await scanModules({ modulesPath }, loader);
 
+          // Register ACL rules from all modules
+          const { getAclRegistry: getAcl } = await server.ssrLoadModule('@erp/core');
+          const aclReg = getAcl();
+          for (const [, modDef] of getModuleRegistry().getAll()) {
+            if (modDef.security.length > 0) {
+              aclReg.register(modDef.security);
+            }
+          }
+
           const order = getModuleRegistry().resolveDependencies();
           await installModules(order);
 
@@ -104,6 +113,82 @@ function erpPlugin() {
       server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
         const { method, url } = req;
         if (!method || !url) { next(); return; }
+
+        // /api/menus — serve filtered menus + views
+        if (method === 'GET' && url.split('?')[0] === '/api/menus') {
+          try {
+            const { verifyToken: verify, getAclRegistry: getAcl, getModuleRegistry: getModReg } = await server.ssrLoadModule('@erp/core');
+
+            let groups: string[] = [];
+            const authHeader = req.headers.authorization;
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+              const token = authHeader.slice(7);
+              try {
+                const payload = verify(token);
+                groups = payload.groups;
+              } catch {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid or expired token' }));
+                return;
+              }
+            } else {
+              res.writeHead(401, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Authentication required' }));
+              return;
+            }
+
+            const aclRegistry = getAcl();
+            const moduleRegistry = getModReg();
+
+            // Collect all views from installed modules, keyed by ID
+            const viewsMap: Record<string, unknown> = {};
+            const allMenus: unknown[] = [];
+
+            for (const [, modDef] of moduleRegistry.getAll()) {
+              if (!modDef.installed) continue;
+              for (const view of modDef.views) {
+                viewsMap[view.id] = view;
+              }
+              for (const menu of modDef.menus) {
+                allMenus.push(menu);
+              }
+            }
+
+            // Filter menus by ACL: include if no action (section header), or if user can read the target model
+            const filteredMenus = allMenus.filter((menu: Record<string, unknown>) => {
+              const action = menu.action as string | undefined;
+              if (!action) return true;
+              const view = viewsMap[action] as Record<string, unknown> | undefined;
+              if (!view) {
+                console.warn(`[erp] Menu "${menu.id}" references unknown view "${action}"`);
+                return false;
+              }
+              const model = view.model as string;
+              return aclRegistry.check(model, 'read', groups);
+            });
+
+            // Filter views map to only include views accessible by remaining menus
+            const accessibleActionIds = new Set(
+              filteredMenus
+                .filter((m: Record<string, unknown>) => m.action)
+                .map((m: Record<string, unknown>) => m.action as string)
+            );
+            const filteredViews: Record<string, unknown> = {};
+            for (const id of accessibleActionIds) {
+              if (viewsMap[id]) {
+                filteredViews[id] = viewsMap[id];
+              }
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ menus: filteredMenus, views: filteredViews }));
+          } catch (err) {
+            console.error('[erp] /api/menus error:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Internal server error' }));
+          }
+          return;
+        }
 
         // Try to match a controller route
         try {
