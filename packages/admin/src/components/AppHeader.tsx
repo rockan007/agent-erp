@@ -7,24 +7,23 @@ import {
   ProfileOutlined,
   GlobalOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store';
-import i18n from '../i18n';
 
 const { Header } = Layout;
 
-const langItems: MenuProps['items'] = [
+const langItems = [
   { key: 'zh_CN', label: '中文' },
   { key: 'en_US', label: 'English' },
 ];
 
-function changeLanguage(key: string) {
-  i18n.changeLanguage(key);
-  localStorage.setItem('erp_lang', key);
-}
-
 export const AppHeader: React.FC = () => {
+  const { i18n } = useTranslation();
   const user = useStore((s) => s.user);
   const logout = useStore((s) => s.logout);
+
+  const currentLangLabel =
+    langItems.find((item) => item.key === i18n.language)?.label ?? 'English';
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key === 'logout') {
@@ -58,17 +57,17 @@ export const AppHeader: React.FC = () => {
         <Dropdown
           menu={{
             items: langItems,
-            onClick: ({ key }) => changeLanguage(key),
+            onClick: ({ key }) => i18n.changeLanguage(key),
           }}
           placement="bottomRight"
         >
           <Button
             type="text"
             icon={<GlobalOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16 }} />}
-            className="erp-header-notify-btn"
+            className="erp-header-lang-btn"
           >
             <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, marginLeft: 4 }}>
-              {i18n.language === 'zh_CN' ? '中文' : 'English'}
+              {currentLangLabel}
             </span>
           </Button>
         </Dropdown>
