@@ -3,8 +3,8 @@ import { hashPassword } from '@erp/core';
 
 export default async function seed(knex: Knex): Promise<void> {
   // Create verification codes table if not exists
-  const hasTable = await knex.schema.hasTable('erp_verification_codes');
-  if (!hasTable) {
+  const hasVerificationCodesTable = await knex.schema.hasTable('erp_verification_codes');
+  if (!hasVerificationCodesTable) {
     await knex.schema.createTable('erp_verification_codes', (t) => {
       t.increments('id').primary();
       t.integer('user_id').notNullable().references('id').inTable('res_users').onDelete('CASCADE');
@@ -13,6 +13,20 @@ export default async function seed(knex: Knex): Promise<void> {
       t.timestamp('expires_at', { useTz: true }).notNullable();
       t.boolean('used').defaultTo(false);
       t.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
+    });
+  }
+
+  // Create translations table if not exists (reserved for future business module translations)
+  const hasTranslationsTable = await knex.schema.hasTable('erp_translations');
+  if (!hasTranslationsTable) {
+    await knex.schema.createTable('erp_translations', (t) => {
+      t.increments('id').primary();
+      t.string('module', 64);
+      t.string('resource_type', 32);
+      t.string('resource_id', 128);
+      t.string('lang', 10);
+      t.text('value').notNullable();
+      t.unique(['module', 'resource_type', 'resource_id', 'lang']);
     });
   }
 
