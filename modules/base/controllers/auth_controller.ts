@@ -1,5 +1,5 @@
 import { env } from '@erp/domain';
-import { hashPassword, verifyPassword, signToken, storeCode, verifyCode } from '@erp/core';
+import { hashPassword, verifyPassword, signToken, storeCode, verifyCode, tError } from '@erp/core';
 import { getKnex } from '@erp/data';
 
 export class AuthController {
@@ -11,11 +11,12 @@ export class AuthController {
     { path: '/api/auth/reset-password', method: 'POST' as const, handler: 'resetPassword', auth: false },
   ];
 
-  async login(ctx: { body: Record<string, unknown> }) {
+  async login(ctx: { body: Record<string, unknown>; locale?: string }) {
     const { login, password } = ctx.body;
+    const lang = ctx.locale ?? 'en_US';
 
     if (!login || !password) {
-      throw new Error('Login and password are required');
+      throw new Error(tError(lang, 'errors:auth.login_password_required'));
     }
 
     const knex = getKnex();
@@ -24,12 +25,12 @@ export class AuthController {
       .first();
 
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new Error(tError(lang, 'errors:auth.invalid_credentials'));
     }
 
     const valid = await verifyPassword(password as string, user.password);
     if (!valid) {
-      throw new Error('Invalid credentials');
+      throw new Error(tError(lang, 'errors:auth.invalid_credentials'));
     }
 
     const groupRows = await knex('res_users_groups_rel')
@@ -45,15 +46,16 @@ export class AuthController {
     };
   }
 
-  async register(ctx: { body: Record<string, unknown> }) {
+  async register(ctx: { body: Record<string, unknown>; locale?: string }) {
     const { name, login, password, email } = ctx.body;
+    const lang = ctx.locale ?? 'en_US';
 
     if (!name || !login || !password || !email) {
-      throw new Error('Name, login, password, and email are required');
+      throw new Error(tError(lang, 'errors:auth.name_login_password_email_required'));
     }
 
     if (typeof password === 'string' && password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
+      throw new Error(tError(lang, 'errors:auth.password_too_short'));
     }
 
     const knex = getKnex();
@@ -62,14 +64,14 @@ export class AuthController {
       .where({ login: login as string })
       .first();
     if (existingLogin) {
-      throw new Error('A user with this login already exists');
+      throw new Error(tError(lang, 'errors:auth.user_exists'));
     }
 
     const existingEmail = await knex('res_users')
       .where({ email: email as string })
       .first();
     if (existingEmail) {
-      throw new Error('A user with this email already exists');
+      throw new Error(tError(lang, 'errors:auth.email_exists'));
     }
 
     const hashed = await hashPassword(password as string);
@@ -91,18 +93,19 @@ export class AuthController {
     };
   }
 
-  async verifyRegistration(ctx: { body: Record<string, unknown> }) {
+  async verifyRegistration(ctx: { body: Record<string, unknown>; locale?: string }) {
     const { userId, code } = ctx.body;
+    const lang = ctx.locale ?? 'en_US';
 
     if (!userId || !code) {
-      throw new Error('User ID and code are required');
+      throw new Error(tError(lang, 'errors:auth.user_id_code_required'));
     }
 
     const knex = getKnex();
     const valid = await verifyCode(knex, userId as number, code as string, 'register');
 
     if (!valid) {
-      throw new Error('Invalid or expired verification code');
+      throw new Error(tError(lang, 'errors:auth.invalid_code'));
     }
 
     await env('res.users').write([userId as number], { active: true });
@@ -110,11 +113,12 @@ export class AuthController {
     return { message: 'Account activated. You can now log in.' };
   }
 
-  async forgotPassword(ctx: { body: Record<string, unknown> }) {
+  async forgotPassword(ctx: { body: Record<string, unknown>; locale?: string }) {
     const { email } = ctx.body;
+    const lang = ctx.locale ?? 'en_US';
 
     if (!email) {
-      throw new Error('Email is required');
+      throw new Error(tError(lang, 'errors:auth.email_required'));
     }
 
     const knex = getKnex();
@@ -133,22 +137,23 @@ export class AuthController {
     return { message: 'If the email exists, a reset code has been sent.' };
   }
 
-  async resetPassword(ctx: { body: Record<string, unknown> }) {
+  async resetPassword(ctx: { body: Record<string, unknown>; locale?: string }) {
     const { userId, code, password } = ctx.body;
+    const lang = ctx.locale ?? 'en_US';
 
     if (!userId || !code || !password) {
-      throw new Error('User ID, code, and new password are required');
+      throw new Error(tError(lang, 'errors:auth.user_id_code_password_required'));
     }
 
     if (typeof password === 'string' && password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
+      throw new Error(tError(lang, 'errors:auth.password_too_short'));
     }
 
     const knex = getKnex();
     const valid = await verifyCode(knex, userId as number, code as string, 'reset');
 
     if (!valid) {
-      throw new Error('Invalid or expired reset code');
+      throw new Error(tError(lang, 'errors:auth.invalid_reset_code'));
     }
 
     const hashed = await hashPassword(password as string);
