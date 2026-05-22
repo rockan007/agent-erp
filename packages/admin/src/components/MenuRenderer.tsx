@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { Menu } from 'antd';
+import React, { useState, useMemo } from 'react';
+import { Menu, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   AppstoreOutlined,
@@ -84,6 +84,73 @@ interface Props {
   onItemClick?: () => void;
 }
 
+/** Collapsed sidebar: icons + Dropdown for parent items */
+const CollapsedMenu: React.FC<{
+  tree: TreeNode[];
+  activeMenuId: string | null;
+  onSelect: (id: string) => void;
+}> = ({ tree, activeMenuId, onSelect }) => {
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  return (
+    <div className="flex flex-col items-center py-2 gap-1">
+      {tree.map((node) => {
+        const icon = pickIcon(node.item.name);
+        const isActive = activeMenuId === node.item.id
+          || node.children.some((c) => c.item.id === activeMenuId);
+
+        if (node.children.length > 0) {
+          const menuItems: MenuProps['items'] = node.children.map((child) => ({
+            key: child.item.id,
+            icon: pickIcon(child.item.name),
+            label: child.item.name,
+          }));
+
+          return (
+            <Dropdown
+              key={node.item.id}
+              open={openDropdown === node.item.id}
+              onOpenChange={(open) => {
+                setOpenDropdown(open ? node.item.id : null);
+              }}
+              menu={{
+                items: menuItems,
+                onClick: ({ key }) => {
+                  onSelect(key);
+                  setOpenDropdown(null);
+                },
+              }}
+              trigger={['click']}
+              // @ts-expect-error rightTop is valid at runtime but not in antd's TS types
+              placement="rightTop"
+            >
+              <button
+                type="button"
+                className={`erp-collapsed-menu-btn ${isActive ? 'erp-collapsed-menu-btn-active' : ''}`}
+                title={node.item.name}
+              >
+                {icon}
+              </button>
+            </Dropdown>
+          );
+        }
+
+        return (
+          <button
+            key={node.item.id}
+            type="button"
+            className={`erp-collapsed-menu-btn ${isActive ? 'erp-collapsed-menu-btn-active' : ''}`}
+            title={node.item.name}
+            onClick={() => onSelect(node.item.id)}
+          >
+            {icon}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
   const menuItems = useStore((s) => s.menuItems);
   const activeMenuId = useStore((s) => s.activeMenuId);
@@ -101,66 +168,43 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
     return set;
   }, [menuItems]);
 
-  // Walk parent chain for a menu item (e.g. 'partner_menu' → ['contacts_root'])
-  const getAncestorKeys = useCallback(
-    (menuId: string | null): string[] => {
-      if (!menuId) return [];
-      const parentMap = new Map<string, string | undefined>();
-      for (const item of menuItems) {
-        parentMap.set(item.id, item.parentId);
-      }
-      const keys: string[] = [];
-      let pid: string | undefined = parentMap.get(menuId);
-      while (pid) {
-        keys.unshift(pid);
-        pid = parentMap.get(pid);
-      }
-      return keys;
-    },
-    [menuItems],
+  const parentMap = useMemo(() => {
+    const map = new Map<string, string | undefined>();
+    for (const item of menuItems) {
+      map.set(item.id, item.parentId);
+    }
+    return map;
+  }, [menuItems]);
+
+  const getAncestorKeys = (menuId: string | null): string[] => {
+    if (!menuId) return [];
+    const keys: string[] = [];
+    let pid: string | undefined = parentMap.get(menuId);
+    while (pid) {
+      keys.unshift(pid);
+      pid = parentMap.get(pid);
+    }
+    return keys;
+  };
+
+  const [openKeys, setOpenKeys] = useState<string[]>(() =>
+    activeMenuId ? getAncestorKeys(activeMenuId) : [],
   );
-
-  const [openKeys, setOpenKeys] = useState<string[]>(() => []);
-  const [menuKey, setMenuKey] = useState(0);
-
-  // When activeMenuId or menuItems change (e.g. after fetch), sync openKeys
-  useEffect(() => {
-    if (menuItems.length > 0 && activeMenuId) {
-      setOpenKeys(getAncestorKeys(activeMenuId));
-    }
-  }, [menuItems, activeMenuId, getAncestorKeys]);
-
-  // Keep refs for values the collapse effect uses but shouldn't react to
-  const getAncestorKeysRef = useRef(getAncestorKeys);
-  getAncestorKeysRef.current = getAncestorKeys;
-  const activeMenuIdRef = useRef(activeMenuId);
-  activeMenuIdRef.current = activeMenuId;
-
-  // When sidebar collapses/expands, clear or restore openKeys + remount
-  useEffect(() => {
-    if (siderCollapsed) {
-      setOpenKeys([]);
-      setMenuKey((k) => k + 1);
-    } else {
-      setOpenKeys(getAncestorKeysRef.current(activeMenuIdRef.current));
-    }
-  }, [siderCollapsed]);
 
   const onOpenChange: MenuProps['onOpenChange'] = (keys) => {
     setOpenKeys(keys);
   };
 
-  const onClick: MenuProps['onClick'] = ({ key }) => {
-    // Parent item: let antd handle expand/collapse, no navigation
-    if (parentKeys.has(key)) return;
-
+  const handleSelect = (key: string) => {
     selectMenu(key);
     const clickedItem = menuItems.find((m) => m.id === key);
     setOpenKeys(clickedItem?.parentId ? [clickedItem.parentId] : []);
-    if (siderCollapsed) {
-      setMenuKey((k) => k + 1);
-    }
     onItemClick?.();
+  };
+
+  const onClick: MenuProps['onClick'] = ({ key }) => {
+    if (parentKeys.has(key)) return;
+    handleSelect(key);
   };
 
   if (menuItems.length === 0) {
@@ -175,9 +219,18 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
     );
   }
 
+  if (siderCollapsed) {
+    return (
+      <CollapsedMenu
+        tree={tree}
+        activeMenuId={activeMenuId}
+        onSelect={handleSelect}
+      />
+    );
+  }
+
   return (
     <Menu
-      key={menuKey}
       theme="light"
       mode="inline"
       selectedKeys={activeMenuId ? [activeMenuId] : []}
@@ -185,10 +238,6 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
       onOpenChange={onOpenChange}
       items={antdItems}
       onClick={onClick}
-      motion={{
-        motionName: 'ant-motion-collapse',
-        motionAppear: false,
-      }}
     />
   );
 };
