@@ -5,10 +5,22 @@ import {
   BellOutlined,
   LogoutOutlined,
   ProfileOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { useStore } from '../store';
+import i18n from '../i18n';
 
 const { Header } = Layout;
+
+const langItems: MenuProps['items'] = [
+  { key: 'zh_CN', label: '中文' },
+  { key: 'en_US', label: 'English' },
+];
+
+function changeLanguage(key: string) {
+  i18n.changeLanguage(key);
+  localStorage.setItem('erp_lang', key);
+}
 
 export const AppHeader: React.FC = () => {
   const user = useStore((s) => s.user);
@@ -41,8 +53,26 @@ export const AppHeader: React.FC = () => {
         </span>
       </div>
 
-      {/* Right: notification + user pill */}
+      {/* Right: lang + notification + user pill */}
       <div className="flex items-center gap-3">
+        <Dropdown
+          menu={{
+            items: langItems,
+            onClick: ({ key }) => changeLanguage(key),
+          }}
+          placement="bottomRight"
+        >
+          <Button
+            type="text"
+            icon={<GlobalOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16 }} />}
+            className="erp-header-notify-btn"
+          >
+            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, marginLeft: 4 }}>
+              {i18n.language === 'zh_CN' ? '中文' : 'English'}
+            </span>
+          </Button>
+        </Dropdown>
+
         <Button
           type="text"
           icon={<BellOutlined style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16 }} />}
