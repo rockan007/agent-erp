@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Input, Button, Form } from 'antd';
 import { LockOutlined, MailOutlined, UserOutlined, SafetyOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store';
 import CodeInput from './CodeInput';
 import { Brand } from './Brand';
 
 const ForgotPasswordPage: React.FC = () => {
+  const { t } = useTranslation('auth');
   const forgotPassword = useStore((s) => s.forgotPassword);
   const resetPassword = useStore((s) => s.resetPassword);
   const setAuthView = useStore((s) => s.setAuthView);
@@ -42,19 +44,19 @@ const ForgotPasswordPage: React.FC = () => {
     e.preventDefault();
     const uid = parseInt(userIdInput, 10);
     if (!uid) {
-      setError('Please enter the User ID from the server console');
+      setError(t('forgot.userIdRequired'));
       return;
     }
     if (!code || code.length < 6) {
-      setError('Please enter the 6-digit reset code');
+      setError(t('forgot.codeRequired'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('forgot.confirmPasswordMismatch'));
       return;
     }
     if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('forgot.passwordMinLength'));
       return;
     }
     setError('');
@@ -89,20 +91,20 @@ const ForgotPasswordPage: React.FC = () => {
       >
         {step === 'email' ? (
           <>
-            <h2 className="erp-login-title">Reset Password</h2>
-            <p className="erp-login-subtitle">Enter your email to receive a reset code</p>
+            <h2 className="erp-login-title">{t('forgot.title')}</h2>
+            <p className="erp-login-subtitle">{t('forgot.subtitle')}</p>
 
             <Form onFinish={handleEmailSubmit} layout="vertical" size="large">
               <Form.Item
                 name="email"
                 rules={[
-                  { required: true, message: 'Please enter your email' },
-                  { type: 'email', message: 'Please enter a valid email' },
+                  { required: true, message: t('forgot.emailRequired') },
+                  { type: 'email', message: t('forgot.emailInvalid') },
                 ]}
               >
                 <Input
                   prefix={<MailOutlined className="text-[#bfbfbf]" />}
-                  placeholder="Email"
+                  placeholder={t('forgot.email')}
                   autoComplete="email"
                   className="erp-login-input"
                 />
@@ -121,7 +123,7 @@ const ForgotPasswordPage: React.FC = () => {
                   className="erp-login-btn"
                   block
                 >
-                  Send Reset Code
+                  {t('forgot.sendCode')}
                 </Button>
               </Form.Item>
             </Form>
@@ -132,22 +134,20 @@ const ForgotPasswordPage: React.FC = () => {
                 className="erp-login-link"
                 onClick={() => setAuthView('login')}
               >
-                &larr; Back to login
+                {t('links.backToLogin')}
               </button>
             </div>
           </>
         ) : (
           <>
-            <h2 className="erp-login-title">Set New Password</h2>
-            <p className="erp-login-subtitle">
-              Check the server console for the User ID and reset code
-            </p>
+            <h2 className="erp-login-title">{t('forgot.resetTitle')}</h2>
+            <p className="erp-login-subtitle">{t('forgot.resetSubtitle')}</p>
 
             <form onSubmit={handleReset}>
               <div style={{ marginBottom: 16 }}>
                 <Input
                   prefix={<UserOutlined className="text-[#bfbfbf]" />}
-                  placeholder="User ID (from server console)"
+                  placeholder={t('forgot.userIdPlaceholder')}
                   value={userIdInput}
                   onChange={(e) => setUserIdInput(e.target.value)}
                   className="erp-login-input"
@@ -158,7 +158,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                   <SafetyOutlined className="text-[#bfbfbf]" />
-                  <span style={{ fontSize: 13, color: '#8c8c8c' }}>Reset Code</span>
+                  <span style={{ fontSize: 13, color: '#8c8c8c' }}>{t('forgot.resetCodeLabel')}</span>
                 </div>
                 <CodeInput onComplete={(c) => setCode(c)} disabled={loading} />
               </div>
@@ -166,7 +166,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div style={{ marginBottom: 12 }}>
                 <Input.Password
                   prefix={<LockOutlined className="text-[#bfbfbf]" />}
-                  placeholder="New password"
+                  placeholder={t('forgot.newPasswordPlaceholder')}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="erp-login-input"
@@ -177,7 +177,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div style={{ marginBottom: 16 }}>
                 <Input.Password
                   prefix={<LockOutlined className="text-[#bfbfbf]" />}
-                  placeholder="Confirm new password"
+                  placeholder={t('forgot.confirmPasswordPlaceholder')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="erp-login-input"
@@ -194,7 +194,7 @@ const ForgotPasswordPage: React.FC = () => {
                 className="erp-login-btn"
                 block
               >
-                Reset Password
+                {t('forgot.resetButton')}
               </Button>
             </form>
 
@@ -204,7 +204,7 @@ const ForgotPasswordPage: React.FC = () => {
                 className="erp-login-link"
                 onClick={() => { setStep('email'); setError(''); }}
               >
-                &larr; Back
+                {t('links.back')}
               </button>
             </div>
           </>

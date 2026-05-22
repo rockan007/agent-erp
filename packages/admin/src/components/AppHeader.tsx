@@ -18,7 +18,7 @@ const langItems = [
 ];
 
 export const AppHeader: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const user = useStore((s) => s.user);
   const logout = useStore((s) => s.logout);
 
@@ -32,9 +32,9 @@ export const AppHeader: React.FC = () => {
   };
 
   const userMenuItems: MenuProps['items'] = [
-    { key: 'profile', icon: <ProfileOutlined />, label: 'My Profile' },
+    { key: 'profile', icon: <ProfileOutlined />, label: t('label.myProfile') },
     { type: 'divider' },
-    { key: 'logout', icon: <LogoutOutlined />, label: 'Logout', danger: true },
+    { key: 'logout', icon: <LogoutOutlined />, label: t('label.logout'), danger: true },
   ];
 
   return (
@@ -80,10 +80,10 @@ export const AppHeader: React.FC = () => {
         <Dropdown menu={{ items: userMenuItems, onClick: handleMenuClick }} placement="bottomRight">
           <Space className="erp-header-user-pill cursor-pointer">
             <div className="erp-header-user-avatar">
-              {(user?.name ?? 'Guest').charAt(0).toUpperCase()}
+              {(user?.name ?? t('label.guest')).charAt(0).toUpperCase()}
             </div>
             <span className="erp-header-user-name">
-              {user?.name ?? 'Guest'}
+              {user?.name ?? t('label.guest')}
             </span>
             <span className="erp-header-user-arrow">▾</span>
           </Space>

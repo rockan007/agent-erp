@@ -4,5 +4,11 @@
   },
   "menu": {
     "navigation": "导航菜单"
+  },
+  "label": {
+    "home": "首页",
+    "guest": "访客",
+    "myProfile": "个人中心",
+    "logout": "退出登录"
   }
 }

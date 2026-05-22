@@ -4,5 +4,11 @@
   },
   "menu": {
     "navigation": "Navigation Menu"
+  },
+  "label": {
+    "home": "Home",
+    "guest": "Guest",
+    "myProfile": "My Profile",
+    "logout": "Logout"
   }
 }

@@ -127,3 +127,28 @@ The scanner reads `manifest.ts` for metadata and `index.ts` for the exported arr
 - Knex client is `pg` (PostgreSQL). Connection is a module-level singleton.
 - `tsconfig.base.json` enforces `strict: true`, `noUncheckedIndexedAccess: true`, `experimentalDecorators: true`
 - Admin package has its own `jsx: "react-jsx"` setting; other packages compile via tsup
+
+## Internationalization (i18n)
+
+**Library:** i18next (react-i18next for React, i18next-browser-languagedetector for detection, i18next on Node.js backend).
+
+**Languages:** Extensible architecture, first batch `zh_CN` + `en_US`. Language code convention: underscore separator (`zh_CN`), auto-mapped from browser hyphen format (`zh-CN`) via `convertDetectedLanguage`.
+
+**Detection:** `localStorage` (key: `erp_lang`) first, then `navigator.language`. Language persists in localStorage on manual switch.
+
+### Frontend (`packages/admin/src/i18n.ts`)
+
+- **Namespaces:** `common` (header, sidebar, breadcrumbs), `auth` (login/register/forgot pages), `dashboard` (welcome screen)
+- **Locale files:** `packages/admin/src/locales/{zh_CN,en_US}/{common,auth,dashboard}.json`
+- **Usage:** `useTranslation('auth')` hook, or `useTranslation()` for common namespace. Import `i18n` directly for `i18n.changeLanguage(key)` in language switcher.
+- **Ant Design:** `ConfigProvider locale` synced via `i18n.on('languageChanged')` listener in `Root` component (`main.tsx`). `getAntdLocale()` maps i18n language to antd locale import.
+- **Adding a language:** Create matching JSON files under `locales/<new_locale>/`, add to `resources` in `i18n.ts`, add to `langItems` in `AppHeader.tsx`.
+
+### Backend (`packages/core/src/i18n/index.ts`)
+
+- **Purpose:** Translates API error messages per-request based on `Accept-Language` header
+- **`getRequestLocale(langHeader?)`**: Parses `Accept-Language` with quality values, maps to `zh_CN`/`en_US`
+- **`tError(lang, key, params?)`**: Returns translated error string via `i18n.getFixedT(lang)`
+- **Controller pattern:** `const lang = ctx.locale ?? 'en_US';` then `tError(lang, 'errors:auth.invalid_credentials')`
+- **Middleware:** Vite SSR module loads `getRequestLocale` from `@erp/core`, sets `ctx.locale`
+- **Adding backend translations:** Add keys under `errors:` in `packages/core/src/i18n/index.ts` errorResources

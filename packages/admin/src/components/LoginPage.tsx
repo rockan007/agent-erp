@@ -110,14 +110,14 @@ const LoginPage: React.FC = () => {
               className="erp-login-link"
               onClick={() => setAuthView('register')}
             >
-              Create account
+              {t('links.createAccount')}
             </button>
             <button
               type="button"
               className="erp-login-link erp-login-link-muted"
               onClick={() => setAuthView('forgot-password')}
             >
-              Forgot password?
+              {t('links.forgotPassword')}
             </button>
           </div>
         </Form>

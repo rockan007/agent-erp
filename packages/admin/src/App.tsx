@@ -52,7 +52,8 @@ const WelcomeScreen: React.FC = () => {
   const menuItems = useStore((s) => s.menuItems);
   const setActiveMenu = useStore((s) => s.setActiveMenu);
 
-  const greeting = t('greeting.morning', { name: user?.name ?? 'Guest' });
+  const { t: tc } = useTranslation('common');
+  const greeting = t('greeting.morning', { name: user?.name ?? tc('label.guest') });
 
   const statCards = [
     { label: t('stats.activeUsers'), value: '1,248', change: '+12%', gradient: 'erp-stat-blue' },
@@ -309,7 +310,7 @@ const App: React.FC = () => {
             <>
               <div className="erp-content-fixed">
                 <div className="erp-content-breadcrumb">
-                  <span className="erp-breadcrumb-home">Home</span>
+                  <span className="erp-breadcrumb-home">{tc('label.home')}</span>
                 </div>
               </div>
               <div className="erp-content-scroll">

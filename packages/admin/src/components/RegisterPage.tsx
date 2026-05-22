@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Input, Button, Form } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, IdcardOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store';
 import CodeInput from './CodeInput';
 import { Brand } from './Brand';
 
 const RegisterPage: React.FC = () => {
+  const { t } = useTranslation('auth');
   const register = useStore((s) => s.register);
   const verifyRegistration = useStore((s) => s.verifyRegistration);
   const setAuthView = useStore((s) => s.setAuthView);
@@ -72,17 +74,17 @@ const RegisterPage: React.FC = () => {
       >
         {step === 'form' ? (
           <>
-            <h2 className="erp-login-title">Create Account</h2>
-            <p className="erp-login-subtitle">Fill in your details to register</p>
+            <h2 className="erp-login-title">{t('register.title')}</h2>
+            <p className="erp-login-subtitle">{t('register.subtitle')}</p>
 
             <Form onFinish={handleRegister} layout="vertical" size="large">
               <Form.Item
                 name="name"
-                rules={[{ required: true, message: 'Please enter your name' }]}
+                rules={[{ required: true, message: t('register.nameRequired') }]}
               >
                 <Input
                   prefix={<IdcardOutlined className="text-[#bfbfbf]" />}
-                  placeholder="Name"
+                  placeholder={t('register.name')}
                   className="erp-login-input"
                 />
               </Form.Item>
@@ -90,13 +92,13 @@ const RegisterPage: React.FC = () => {
               <Form.Item
                 name="email"
                 rules={[
-                  { required: true, message: 'Please enter your email' },
-                  { type: 'email', message: 'Please enter a valid email' },
+                  { required: true, message: t('register.emailRequired') },
+                  { type: 'email', message: t('register.emailInvalid') },
                 ]}
               >
                 <Input
                   prefix={<MailOutlined className="text-[#bfbfbf]" />}
-                  placeholder="Email"
+                  placeholder={t('register.email')}
                   autoComplete="email"
                   className="erp-login-input"
                 />
@@ -104,11 +106,11 @@ const RegisterPage: React.FC = () => {
 
               <Form.Item
                 name="login"
-                rules={[{ required: true, message: 'Please enter a username' }]}
+                rules={[{ required: true, message: t('register.usernameRequired') }]}
               >
                 <Input
                   prefix={<UserOutlined className="text-[#bfbfbf]" />}
-                  placeholder="Username"
+                  placeholder={t('register.username')}
                   autoComplete="username"
                   className="erp-login-input"
                 />
@@ -117,13 +119,13 @@ const RegisterPage: React.FC = () => {
               <Form.Item
                 name="password"
                 rules={[
-                  { required: true, message: 'Please enter a password' },
-                  { min: 6, message: 'Password must be at least 6 characters' },
+                  { required: true, message: t('register.passwordRequired') },
+                  { min: 6, message: t('register.passwordMinLength') },
                 ]}
               >
                 <Input.Password
                   prefix={<LockOutlined className="text-[#bfbfbf]" />}
-                  placeholder="Password"
+                  placeholder={t('register.password')}
                   autoComplete="new-password"
                   className="erp-login-input"
                 />
@@ -133,20 +135,20 @@ const RegisterPage: React.FC = () => {
                 name="confirm"
                 dependencies={['password']}
                 rules={[
-                  { required: true, message: 'Please confirm your password' },
+                  { required: true, message: t('register.confirmRequired') },
                   ({ getFieldValue }) => ({
                     validator(_: unknown, value: string) {
                       if (!value || getFieldValue('password') === value) {
                         return Promise.resolve();
                       }
-                      return Promise.reject(new Error('Passwords do not match'));
+                      return Promise.reject(new Error(t('register.confirmPasswordMismatch')));
                     },
                   }),
                 ]}
               >
                 <Input.Password
                   prefix={<LockOutlined className="text-[#bfbfbf]" />}
-                  placeholder="Confirm password"
+                  placeholder={t('register.confirmPassword')}
                   autoComplete="new-password"
                   className="erp-login-input"
                 />
@@ -164,7 +166,7 @@ const RegisterPage: React.FC = () => {
                   className="erp-login-btn"
                   block
                 >
-                  Send Verification Code
+                  {t('register.sendCode')}
                 </Button>
               </Form.Item>
             </Form>
@@ -175,16 +177,14 @@ const RegisterPage: React.FC = () => {
                 className="erp-login-link"
                 onClick={() => setAuthView('login')}
               >
-                &larr; Back to login
+                {t('links.backToLogin')}
               </button>
             </div>
           </>
         ) : (
           <>
-            <h2 className="erp-login-title">Verify Email</h2>
-            <p className="erp-login-subtitle">
-              A 6-digit code was sent to your email (check server console)
-            </p>
+            <h2 className="erp-login-title">{t('register.verifyTitle')}</h2>
+            <p className="erp-login-subtitle">{t('register.verifySubtitle')}</p>
 
             <div style={{ margin: '20px 0' }}>
               <CodeInput onComplete={handleVerify} disabled={loading} />
@@ -196,7 +196,7 @@ const RegisterPage: React.FC = () => {
 
             {loading && (
               <div style={{ textAlign: 'center', color: '#8c8c8c', marginTop: 12 }}>
-                Verifying...
+                {t('register.verifying')}
               </div>
             )}
 
@@ -206,7 +206,7 @@ const RegisterPage: React.FC = () => {
                 className="erp-login-link"
                 onClick={() => { setStep('form'); setError(''); }}
               >
-                &larr; Back
+                {t('links.back')}
               </button>
             </div>
           </>

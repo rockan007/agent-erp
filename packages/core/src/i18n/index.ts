@@ -58,11 +58,13 @@ export function getRequestLocale(langHeader?: string): string {
     .map((entry) => {
       const [tag, qRaw] = entry.trim().split(';');
       const q = qRaw ? parseFloat(qRaw.split('=')[1] ?? '1') : 1;
-      return { tag: tag.trim(), q };
+      return { tag: tag?.trim(), q };
     })
+    .filter((e) => e.tag !== undefined)
     .sort((a, b) => b.q - a.q);
 
   for (const { tag } of locales) {
+    if (!tag) continue;
     if (tag === 'zh-CN' || tag === 'zh') return 'zh_CN';
     if (tag.startsWith('zh')) return 'zh_CN';
     if (tag === 'en-US' || tag === 'en') return 'en_US';
