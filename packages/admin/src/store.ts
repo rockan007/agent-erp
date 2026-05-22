@@ -32,6 +32,7 @@ export const useStore = create<AppState>((set, get) => ({
   siderCollapsed: true,
   breadcrumbs: [],
   authView: 'login',
+  viewsMap: {},
 
   setMenuItems: (items) => {
     const { activeMenuId } = get();
@@ -46,6 +47,37 @@ export const useStore = create<AppState>((set, get) => ({
   setSiderCollapsed: (collapsed) => set({ siderCollapsed: collapsed }),
   setBreadcrumbs: (breadcrumbs) => set({ breadcrumbs }),
   setAuthView: (view) => set({ authView: view }),
+
+  fetchMenus: async () => {
+    const { token } = get();
+    if (!token) return;
+    try {
+      const res = await fetch('/api/menus', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        if (res.status === 401) {
+          get().logout();
+        }
+        return;
+      }
+      const data = await res.json();
+      set({ menuItems: data.menus, viewsMap: data.views });
+    } catch {
+      // Server unavailable — user stays on dashboard
+    }
+  },
+
+  selectMenu: (id) => {
+    const { menuItems, viewsMap } = get();
+    const menu = menuItems.find((m) => m.id === id);
+    const view = menu?.action ? viewsMap[menu.action] ?? null : null;
+    set({
+      activeMenuId: id,
+      activeView: view,
+      breadcrumbs: computeBreadcrumbs(menuItems, id),
+    });
+  },
 
   initializeAuth: () => {
     const token = localStorage.getItem('erp_token');
@@ -80,7 +112,7 @@ export const useStore = create<AppState>((set, get) => ({
   logout: () => {
     localStorage.removeItem('erp_token');
     localStorage.removeItem('erp_user');
-    set({ token: null, user: null, activeView: null });
+    set({ token: null, user: null, activeView: null, menuItems: [], viewsMap: {} });
   },
 
   register: async (data) => {

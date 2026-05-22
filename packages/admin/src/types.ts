@@ -51,6 +51,7 @@ export interface AppState {
   token: string | null;
   siderCollapsed: boolean;
   breadcrumbs: BreadcrumbItem[];
+  viewsMap: Record<string, ViewSpec>;
 
   setMenuItems: (items: MenuItem[]) => void;
   setActiveMenu: (id: string) => void;
@@ -58,6 +59,8 @@ export interface AppState {
   setUser: (user: AppState['user']) => void;
   setSiderCollapsed: (collapsed: boolean) => void;
   setBreadcrumbs: (breadcrumbs: BreadcrumbItem[]) => void;
+  fetchMenus: () => Promise<void>;
+  selectMenu: (id: string) => void;
 
   initializeAuth: () => void;
   authView: AuthView;
