@@ -35,6 +35,7 @@ i18n
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'erp_lang',
       caches: ['localStorage'],
+      convertDetectedLanguage: (lng: string) => lng.replace('-', '_'),
     },
     interpolation: { escapeValue: false },
   });

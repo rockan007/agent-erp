@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ConfigProvider, theme } from 'antd';
 import App from './App';
@@ -102,10 +102,14 @@ const themeConfig = {
 const Root = () => {
   const [locale, setLocale] = useState(getAntdLocale());
 
-  i18n.on('languageChanged', () => {
-    setLocale(getAntdLocale());
-    document.documentElement.lang = i18n.language;
-  });
+  useEffect(() => {
+    const handler = () => {
+      setLocale(getAntdLocale());
+      document.documentElement.lang = i18n.language;
+    };
+    i18n.on('languageChanged', handler);
+    return () => { i18n.off('languageChanged', handler); };
+  }, []);
 
   return (
     <ConfigProvider locale={locale} theme={themeConfig}>
