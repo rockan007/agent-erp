@@ -64,7 +64,22 @@ export const useStore = create<AppState>((set, get) => ({
       const data = await res.json();
       // Guard against race: user may have logged out during fetch
       if (!get().token) return;
-      set({ menuItems: data.menus, viewsMap: data.views });
+
+      const { activeMenuId } = get();
+      let activeView = null;
+      if (activeMenuId) {
+        const menu = (data.menus as Array<{ id: string; action?: string }>).find((m) => m.id === activeMenuId);
+        if (menu?.action && data.views[menu.action]) {
+          activeView = data.views[menu.action];
+        }
+      }
+
+      set({
+        menuItems: data.menus,
+        viewsMap: data.views,
+        activeView,
+        breadcrumbs: computeBreadcrumbs(data.menus as MenuItem[], activeMenuId),
+      });
     } catch {
       // Server unavailable — user stays on dashboard
     }
@@ -74,6 +89,7 @@ export const useStore = create<AppState>((set, get) => ({
     const { menuItems, viewsMap } = get();
     const menu = menuItems.find((m) => m.id === id);
     const view = menu?.action ? viewsMap[menu.action] ?? null : null;
+    localStorage.setItem('erp_activeMenuId', id);
     set({
       activeMenuId: id,
       activeView: view,
@@ -87,10 +103,12 @@ export const useStore = create<AppState>((set, get) => ({
     if (token && userJson) {
       try {
         const user = JSON.parse(userJson);
-        set({ token, user });
+        const activeMenuId = localStorage.getItem('erp_activeMenuId');
+        set({ token, user, activeMenuId });
       } catch {
         localStorage.removeItem('erp_token');
         localStorage.removeItem('erp_user');
+        localStorage.removeItem('erp_activeMenuId');
       }
     }
   },
@@ -114,7 +132,8 @@ export const useStore = create<AppState>((set, get) => ({
   logout: () => {
     localStorage.removeItem('erp_token');
     localStorage.removeItem('erp_user');
-    set({ token: null, user: null, activeView: null, menuItems: [], viewsMap: {} });
+    localStorage.removeItem('erp_activeMenuId');
+    set({ token: null, user: null, activeView: null, activeMenuId: null, menuItems: [], viewsMap: {} });
   },
 
   register: async (data) => {

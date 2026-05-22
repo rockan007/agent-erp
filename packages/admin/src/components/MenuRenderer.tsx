@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Menu } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -101,9 +101,50 @@ export const MenuRenderer: React.FC<Props> = ({ onItemClick }) => {
     return set;
   }, [menuItems]);
 
-  const [openKeys, setOpenKeys] = useState<string[]>([]);
-  // Key to force remount of Menu in collapsed mode (closes popup portals)
+  // Walk parent chain for a menu item (e.g. 'partner_menu' → ['contacts_root'])
+  const getAncestorKeys = useCallback(
+    (menuId: string | null): string[] => {
+      if (!menuId) return [];
+      const parentMap = new Map<string, string | undefined>();
+      for (const item of menuItems) {
+        parentMap.set(item.id, item.parentId);
+      }
+      const keys: string[] = [];
+      let pid: string | undefined = parentMap.get(menuId);
+      while (pid) {
+        keys.unshift(pid);
+        pid = parentMap.get(pid);
+      }
+      return keys;
+    },
+    [menuItems],
+  );
+
+  const [openKeys, setOpenKeys] = useState<string[]>(() => []);
   const [menuKey, setMenuKey] = useState(0);
+
+  // When activeMenuId or menuItems change (e.g. after fetch), sync openKeys
+  useEffect(() => {
+    if (menuItems.length > 0 && activeMenuId) {
+      setOpenKeys(getAncestorKeys(activeMenuId));
+    }
+  }, [menuItems, activeMenuId, getAncestorKeys]);
+
+  // Keep refs for values the collapse effect uses but shouldn't react to
+  const getAncestorKeysRef = useRef(getAncestorKeys);
+  getAncestorKeysRef.current = getAncestorKeys;
+  const activeMenuIdRef = useRef(activeMenuId);
+  activeMenuIdRef.current = activeMenuId;
+
+  // When sidebar collapses/expands, clear or restore openKeys + remount
+  useEffect(() => {
+    if (siderCollapsed) {
+      setOpenKeys([]);
+      setMenuKey((k) => k + 1);
+    } else {
+      setOpenKeys(getAncestorKeysRef.current(activeMenuIdRef.current));
+    }
+  }, [siderCollapsed]);
 
   const onOpenChange: MenuProps['onOpenChange'] = (keys) => {
     setOpenKeys(keys);

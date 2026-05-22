@@ -51,6 +51,12 @@ function matchRoute(
 }
 
 function erpPlugin() {
+  // Cached references populated at startup — reused by /api/menus handler
+  // to avoid ssrLoadModule returning a different module instance (empty singleton).
+  let cachedGetModuleRegistry: (() => unknown) | null = null;
+  let cachedGetAclRegistry: (() => unknown) | null = null;
+  let cachedVerifyToken: ((token: string) => unknown) | null = null;
+
   return {
     name: 'erp-plugin',
     configureServer(server: import('vite').ViteDevServer) {
@@ -104,6 +110,12 @@ function erpPlugin() {
           await runModuleSeeds(order, knex);
 
           console.log(`[erp] Modules installed: ${order.join(', ')}`);
+
+          // Cache registry references so /api/menus uses the same singleton instances
+          cachedGetModuleRegistry = getModuleRegistry;
+          cachedGetAclRegistry = getAcl;
+          const { verifyToken } = await server.ssrLoadModule('@erp/core');
+          cachedVerifyToken = verifyToken as (token: string) => unknown;
         } catch (err) {
           console.error('[erp] Startup failed:', err);
         }
@@ -117,14 +129,19 @@ function erpPlugin() {
         // /api/menus — serve filtered menus + views
         if (method === 'GET' && url.split('?')[0] === '/api/menus') {
           try {
-            const { verifyToken: verify, getAclRegistry: getAcl, getModuleRegistry: getModReg } = await server.ssrLoadModule('@erp/core');
+            // Use cached references from startup to ensure same singleton instances
+            if (!cachedGetModuleRegistry || !cachedGetAclRegistry || !cachedVerifyToken) {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Server starting up — please retry' }));
+              return;
+            }
 
             let groups: string[] = [];
             const authHeader = req.headers.authorization;
             if (authHeader && authHeader.startsWith('Bearer ')) {
               const token = authHeader.slice(7);
               try {
-                const payload = verify(token);
+                const payload = cachedVerifyToken(token) as { userId: number; groups: string[] };
                 groups = payload.groups;
               } catch {
                 res.writeHead(401, { 'Content-Type': 'application/json' });
@@ -137,8 +154,8 @@ function erpPlugin() {
               return;
             }
 
-            const aclRegistry = getAcl();
-            const moduleRegistry = getModReg();
+            const aclRegistry = cachedGetAclRegistry() as { check: (model: string, op: string, groups: string[]) => boolean };
+            const moduleRegistry = cachedGetModuleRegistry() as { getAll: () => Map<string, { installed: boolean; views: Array<{ id: string; model: string }>; menus: Array<{ id: string; action?: string }> }> };
 
             // Collect all views from installed modules, keyed by ID
             const viewsMap: Record<string, unknown> = {};
