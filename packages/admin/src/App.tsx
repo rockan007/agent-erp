@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layout, Drawer, Grid } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 import { motion } from 'framer-motion';
 import { AppHeader } from './components/AppHeader';
@@ -45,36 +46,37 @@ const cardVariants = {
   },
 };
 
-const statCards = [
-  { label: '活跃用户', value: '1,248', change: '+12%', gradient: 'erp-stat-blue' },
-  { label: '合作伙伴', value: '356', change: '+8%', gradient: 'erp-stat-green' },
-  { label: '本月订单', value: '89', change: '+23%', gradient: 'erp-stat-gold' },
-  { label: '营收 (K)', value: '¥482', change: '+18%', gradient: 'erp-stat-purple' },
-];
-
-const quickActions = [
-  { label: '新建订单', primary: true },
-  { label: '添加伙伴', primary: false },
-  { label: '报表中心', primary: false },
-  { label: '系统设置', primary: false },
-  { label: '导入数据', primary: false },
-];
-
-const mockBars = [45, 70, 55, 85, 60, 90, 75, 95, 65, 80, 70, 88];
-
-const mockActivities = [
-  { color: '#1890ff', text: '张三 创建了新订单 #1024' },
-  { color: '#52c41a', text: '李四 更新了合作伙伴信息' },
-  { color: '#faad14', text: '王五 提交了月度报表' },
-  { color: '#722ed1', text: '系统 完成了数据备份' },
-];
-
 const WelcomeScreen: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const user = useStore((s) => s.user);
   const menuItems = useStore((s) => s.menuItems);
   const setActiveMenu = useStore((s) => s.setActiveMenu);
 
-  const greeting = `早上好, ${user?.name ?? 'Guest'}`;
+  const greeting = t('greeting.morning', { name: user?.name ?? 'Guest' });
+
+  const statCards = [
+    { label: t('stats.activeUsers'), value: '1,248', change: '+12%', gradient: 'erp-stat-blue' },
+    { label: t('stats.partners'), value: '356', change: '+8%', gradient: 'erp-stat-green' },
+    { label: t('stats.monthlyOrders'), value: '89', change: '+23%', gradient: 'erp-stat-gold' },
+    { label: t('stats.revenue'), value: '¥482', change: '+18%', gradient: 'erp-stat-purple' },
+  ];
+
+  const quickActions = [
+    { label: t('actions.createOrder'), primary: true },
+    { label: t('actions.addPartner'), primary: false },
+    { label: t('actions.reports'), primary: false },
+    { label: t('actions.settings'), primary: false },
+    { label: t('actions.import'), primary: false },
+  ];
+
+  const mockBars = [45, 70, 55, 85, 60, 90, 75, 95, 65, 80, 70, 88];
+
+  const mockActivities = [
+    { color: '#1890ff', text: t('activity.orderCreated', { name: '张三', id: '1024' }) },
+    { color: '#52c41a', text: t('activity.partnerUpdated', { name: '李四' }) },
+    { color: '#faad14', text: t('activity.reportSubmitted', { name: '王五' }) },
+    { color: '#722ed1', text: t('activity.backupCompleted') },
+  ];
 
   return (
     <div className="erp-dashboard">
@@ -87,7 +89,7 @@ const WelcomeScreen: React.FC = () => {
         {/* Greeting */}
         <motion.div variants={itemVariants} className="erp-dashboard-greeting">
           <h1 className="erp-dashboard-greeting-text">{greeting}</h1>
-          <p className="erp-dashboard-greeting-sub">以下是您的业务概览</p>
+          <p className="erp-dashboard-greeting-sub">{t('greeting.subtitle')}</p>
         </motion.div>
 
         {/* Stats cards */}
@@ -101,9 +103,7 @@ const WelcomeScreen: React.FC = () => {
               <div className="erp-stat-label">{card.label}</div>
               <div className="erp-stat-value">{card.value}</div>
               <div className="erp-stat-change">
-                {card.change}
-                {' '}
-                vs 上月
+                {card.change}{' '}{t('stats.vsLastMonth')}
               </div>
             </motion.div>
           ))}
@@ -113,7 +113,7 @@ const WelcomeScreen: React.FC = () => {
         <motion.div variants={itemVariants} className="erp-dashboard-content">
           {/* Main chart */}
           <div className="erp-dashboard-chart">
-            <div className="erp-card-header">月度趋势</div>
+            <div className="erp-card-header">{t('chart.monthlyTrend')}</div>
             <div className="erp-chart-bars">
               {mockBars.map((h, i) => (
                 <div key={i} className="erp-chart-bar-col">
@@ -122,8 +122,7 @@ const WelcomeScreen: React.FC = () => {
                     style={{ height: `${h}%` }}
                   />
                   <span className="erp-chart-label">
-                    {i + 1}
-                    月
+                    {i + 1}{t('chart.month')}
                   </span>
                 </div>
               ))}
@@ -132,7 +131,7 @@ const WelcomeScreen: React.FC = () => {
 
           {/* Recent activity */}
           <div className="erp-dashboard-recent">
-            <div className="erp-card-header">最近动态</div>
+            <div className="erp-card-header">{t('activity.recent')}</div>
             <div className="erp-recent-list">
               {mockActivities.map((item, i) => (
                 <div key={i} className="erp-recent-item">
@@ -190,6 +189,7 @@ const WelcomeScreen: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  const { t: tc } = useTranslation('common');
   const activeView = useStore((s) => s.activeView);
   const siderCollapsed = useStore((s) => s.siderCollapsed);
   const setSiderCollapsed = useStore((s) => s.setSiderCollapsed);
@@ -238,7 +238,7 @@ const App: React.FC = () => {
             {/* Sidebar top: section label + hamburger */}
             <div className="erp-sider-top">
               {!siderCollapsed && (
-                <span className="erp-sider-section-label">导航菜单</span>
+                <span className="erp-sider-section-label">{tc('menu.navigation')}</span>
               )}
               <button
                 type="button"
@@ -270,7 +270,7 @@ const App: React.FC = () => {
           >
             <div className="erp-sider-light flex flex-col h-full">
               <div className="erp-sider-top px-3">
-                <span className="erp-sider-section-label">导航菜单</span>
+                <span className="erp-sider-section-label">{tc('menu.navigation')}</span>
                 <button
                   type="button"
                   className="erp-sider-collapse-btn"
