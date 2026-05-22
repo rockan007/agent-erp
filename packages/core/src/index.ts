@@ -19,3 +19,5 @@ export type { AuditEntry } from './security';
 
 export { hashPassword, verifyPassword, signToken, verifyToken, storeCode, verifyCode } from './auth';
 export type { TokenPayload } from './auth';
+
+export { getRequestLocale, tError } from './i18n';
