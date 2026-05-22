@@ -1,7 +1,9 @@
 import React from 'react';
-import { Form, Input, Select, Button, Tabs, Card, Row, Col } from 'antd';
+import { Form, Button, Tabs, Card, Row, Col } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
 import { ViewSpec, ViewField } from '../store';
+import { TextWidget } from './widgets/TextWidget';
+import { SelectWidget } from './widgets/SelectWidget';
 
 interface Props {
   view: ViewSpec;
@@ -11,21 +13,18 @@ function renderWidget(field: ViewField) {
   const widget = field.widget ?? 'text';
   switch (widget) {
     case 'select':
-      return <Select placeholder="-- Select --" allowClear />;
+      return <SelectWidget field={field} />;
     case 'text':
     default:
-      return <Input />;
+      return <TextWidget field={field} />;
   }
 }
 
-function renderFields(fieldNames: string[], fields: ViewField[]) {
-  return fieldNames.map((fieldName) => {
-    const fieldDef = fields.find((f) => f.name === fieldName);
-    if (!fieldDef) return null;
-    return (
+function renderFieldItem(fieldDef: ViewField) {
+  return (
+    <Col key={fieldDef.name} xs={24} md={12}>
       <Form.Item
-        key={fieldName}
-        name={fieldName}
+        name={fieldDef.name}
         label={fieldDef.label ?? fieldDef.name}
         rules={
           fieldDef.required
@@ -35,21 +34,30 @@ function renderFields(fieldNames: string[], fields: ViewField[]) {
       >
         {renderWidget(fieldDef)}
       </Form.Item>
-    );
-  });
+    </Col>
+  );
+}
+
+function renderFields(fieldNames: string[], fields: ViewField[]) {
+  const resolved = fieldNames
+    .map((name) => fields.find((f) => f.name === name))
+    .filter((f): f is ViewField => f != null);
+
+  if (resolved.length === 0) return null;
+
+  return (
+    <Row gutter={[20, 4]}>
+      {resolved.map((f) => renderFieldItem(f))}
+    </Row>
+  );
 }
 
 function renderFlatFields(fields: ViewField[]) {
-  return fields.map((f) => (
-    <Form.Item
-      key={f.name}
-      name={f.name}
-      label={f.label ?? f.name}
-      rules={f.required ? [{ required: true, message: `${f.label ?? f.name} is required` }] : undefined}
-    >
-      {renderWidget(f)}
-    </Form.Item>
-  ));
+  return (
+    <Row gutter={[20, 4]}>
+      {fields.map((f) => renderFieldItem(f))}
+    </Row>
+  );
 }
 
 export const FormRenderer: React.FC<Props> = ({ view }) => {
@@ -72,7 +80,7 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
               key: String(i),
               label: item.title,
               children: (
-                <div className="pt-2">{renderFields(item.fields, view.fields)}</div>
+                <div className="pt-3">{renderFields(item.fields, view.fields)}</div>
               ),
             }))}
           />
@@ -81,7 +89,7 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
         return (
           <Row gutter={[16, 16]}>
             {view.layout.items.map((item, i) => (
-              <Col key={i} span={24 / view.layout!.items.length}>
+              <Col key={i} xs={24} md={Math.max(12, Math.floor(24 / Math.min(view.layout!.items.length, 2)))}>
                 <Card title={item.title} size="small" className="erp-card-elevated">
                   {renderFields(item.fields, view.fields)}
                 </Card>
@@ -108,7 +116,7 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
       <div className="erp-form-card">
         <Form form={form} layout="vertical" onFinish={handleSave}>
           {renderContent()}
-          <div className="mt-6 pt-5 border-t border-[#e8e3da]">
+          <div className="mt-6 pt-5 border-t border-[#e8ecf1]">
             <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="middle">
               Save
             </Button>

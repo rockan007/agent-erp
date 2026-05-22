@@ -21,7 +21,7 @@ export const PageHeader: React.FC<Props> = ({ view }) => {
         items={breadcrumbItems}
         className="erp-page-breadcrumb"
       />
-      <div className="flex items-center justify-between mt-1">
+      <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-3">
           <div className="w-1 h-5 rounded-full bg-[#1890ff]" />
           <Title level={5} className="!mb-0 text-[#1a1f1c] tracking-tight">

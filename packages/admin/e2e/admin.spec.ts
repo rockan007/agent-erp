@@ -186,8 +186,9 @@ test.describe('Search View', () => {
     await expect(page.locator('.ant-typography:has-text("Search Partners")')).toBeVisible();
   });
 
-  test('renders inline form with search fields', async ({ page }) => {
-    await expect(page.locator('.ant-form-inline')).toBeVisible();
+  test('renders search form with search fields', async ({ page }) => {
+    await expect(page.locator('.ant-form').first()).toBeVisible();
+    await expect(page.locator('input[id="name"]')).toBeVisible();
   });
 
   test('renders Search and Clear buttons', async ({ page }) => {

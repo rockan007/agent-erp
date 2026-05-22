@@ -4,8 +4,8 @@ import { ViewField } from '../../store';
 
 interface Props {
   field: ViewField;
-  value: string;
-  onChange: (value: string) => void;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
 function isTupleArray(v: unknown): v is [string, string][] {
@@ -24,7 +24,7 @@ export const SelectWidget: React.FC<Props> = ({ field, value, onChange }) => {
     <Select
       value={value || undefined}
       options={options}
-      onChange={(v) => onChange(v)}
+      onChange={(v) => onChange?.(v)}
       placeholder="-- Select --"
       allowClear
       className="w-full"
