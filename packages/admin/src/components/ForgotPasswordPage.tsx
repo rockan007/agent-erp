@@ -4,6 +4,7 @@ import { LockOutlined, MailOutlined, UserOutlined, SafetyOutlined } from '@ant-d
 import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import CodeInput from './CodeInput';
+import { Brand } from './Brand';
 
 const ForgotPasswordPage: React.FC = () => {
   const forgotPassword = useStore((s) => s.forgotPassword);
@@ -76,13 +77,7 @@ const ForgotPasswordPage: React.FC = () => {
       <div className="erp-login-blob erp-login-blob-2" />
       <div className="erp-login-blob erp-login-blob-3" />
 
-      <div className="erp-login-brand">
-        <div className="erp-login-brand-icon">A</div>
-        <div>
-          <div className="erp-login-brand-name">Agent ERP</div>
-          <div className="erp-login-brand-sub">智能企业管理平台</div>
-        </div>
-      </div>
+      <Brand />
 
       <motion.div
         className="erp-login-card"

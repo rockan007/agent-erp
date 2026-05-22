@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined, MailOutlined, IdcardOutlined } from '@ant-d
 import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import CodeInput from './CodeInput';
+import { Brand } from './Brand';
 
 const RegisterPage: React.FC = () => {
   const register = useStore((s) => s.register);
@@ -59,13 +60,7 @@ const RegisterPage: React.FC = () => {
       <div className="erp-login-blob erp-login-blob-2" />
       <div className="erp-login-blob erp-login-blob-3" />
 
-      <div className="erp-login-brand">
-        <div className="erp-login-brand-icon">A</div>
-        <div>
-          <div className="erp-login-brand-name">Agent ERP</div>
-          <div className="erp-login-brand-sub">智能企业管理平台</div>
-        </div>
-      </div>
+      <Brand />
 
       <motion.div
         className="erp-login-card"
