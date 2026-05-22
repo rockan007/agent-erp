@@ -107,8 +107,7 @@ function erpPlugin() {
 
         // Try to match a controller route
         try {
-          const { verifyToken } = await server.ssrLoadModule('@erp/core');
-          const { getModuleRegistry } = await server.ssrLoadModule('@erp/core');
+          const { verifyToken, getModuleRegistry, getRequestLocale } = await server.ssrLoadModule('@erp/core');
 
           const registry = getModuleRegistry();
           for (const [, modDef] of registry.getAll()) {
@@ -149,15 +148,17 @@ function erpPlugin() {
                 }
 
                 const ctrl = new Ctrl();
-                const ctx = { uid, params: match.params, body };
+                const locale = getRequestLocale(req.headers['accept-language']);
+                const ctx = { uid, params: match.params, body, locale };
                 try {
                   const result = await ctrl[route.handler](ctx);
                   res.writeHead(200, { 'Content-Type': 'application/json' });
                   res.end(JSON.stringify(result ?? {}));
                 } catch (handlerErr) {
                   console.error('[erp] handler error:', handlerErr);
+                  const message = handlerErr instanceof Error ? handlerErr.message : 'Internal server error';
                   res.writeHead(500, { 'Content-Type': 'application/json' });
-                  res.end(JSON.stringify({ error: 'Internal server error' }));
+                  res.end(JSON.stringify({ error: message }));
                 }
                 return;
               }
