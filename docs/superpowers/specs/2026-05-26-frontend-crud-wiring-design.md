@@ -1,11 +1,13 @@
 # Frontend CRUD Wiring for Tree Views
 
 **Date:** 2026-05-26
-**Status:** Draft
+**Status:** Implemented
 
 ## Overview
 
 Hook up the `TableRenderer` to real API data so users can create, edit, and delete records directly from tree/list views. The backend CRUD APIs already exist (GroupController, UserController, PartnerController). This work makes the frontend functional.
+
+**Scope:** Only `res.groups` tree view enables inline editing (`editable: true`). Users and partners trees remain read-only — their editing goes through form views. This is controlled by the `editable` flag on `ViewSpec`.
 
 ## Current State
 
@@ -32,6 +34,18 @@ function useCrud(model: string) {
 - `fetchAll()` → GET, `create(data)` → POST, `update(id, data)` → PUT, `remove(id)` → DELETE
 - On successful create/update/delete, auto-calls `fetchAll()` to refresh the list
 - Manages `loading` and `error` state internally
+- Auto-fetches on mount when token is available (via `useEffect`)
+- **Implementation detail:** `create`/`update`/`remove` set `loading: true` during operations, capture errors in state (set `error`), and re-throw to callers. Uses `mountedRef` pattern to prevent setState after unmount.
+
+### 1.5 `ViewSpec.editable` Flag
+
+Added `editable?: boolean` to `ViewSpec` in `types.ts`. Tree views only enable inline CRUD when `editable: true` is set on the view definition.
+
+- `res.groups.tree.ts`: `editable: true` — inline CRUD enabled
+- `res.users.tree.ts`: no `editable` flag — read-only list
+- `res.partner.tree.ts`: no `editable` flag — read-only list
+
+`TreeCrudPage` checks `view.editable` before passing `crud` to `TableRenderer`. Without it, the table renders as a read-only display.
 
 ### 2. TableRenderer Changes
 
@@ -61,29 +75,32 @@ New props: `records: Record<string, unknown>[]`, `loading: boolean`, `crud?: Cru
 
 **Edit:** `packages/admin/src/components/ViewRenderer.tsx`
 
-For `view.type === 'tree'`:
-- Call `useCrud(view.model)` on mount
-- Pass `records`, `loading`, `error`, and `crud` callbacks to `TableRenderer`
+Module-level `TreeCrudPage` component (defined before `renderView` to avoid remounting):
 
 ```tsx
-case 'tree': {
+const TreeCrudPage: React.FC<{ view: ViewSpec }> = ({ view }) => {
   const { records, loading, error, create, update, remove } = useCrud(view.model);
+  const crud = view.editable
+    ? {
+        onSave: async (id, data) => { id != null ? await update(id, data) : await create(data); },
+        onDelete: async (id) => { await remove(id); },
+      }
+    : undefined;
   return (
     <TableRenderer
       view={view}
       records={records}
       loading={loading}
       error={error}
-      crud={{
-        onSave: async (id, data) => { id != null ? await update(id, data) : await create(data); },
-        onDelete: async (id) => { await remove(id); },
-      }}
+      crud={crud}
     />
   );
-}
+};
 ```
 
-Note: `useCrud` is called inside the `tree` case, not at the top of `renderView`. The `switch` dispatches directly, so hooks rules are satisfied.
+`renderView` dispatches `case 'tree': return <TreeCrudPage view={view} />;`
+
+The `crud` prop is only passed when `view.editable` is true. Otherwise `TableRenderer` renders a read-only list.
 
 ### 4. Error Handling
 
@@ -104,8 +121,15 @@ Note: `useCrud` is called inside the `tree` case, not at the top of `renderView`
 | File | Action | Purpose |
 |------|--------|---------|
 | `packages/admin/src/hooks/useCrud.ts` | Create | Data fetching/mutation hook |
+| `packages/admin/src/hooks/__tests__/useCrud.test.ts` | Create | Unit tests for useCrud (10 tests) |
 | `packages/admin/src/components/TableRenderer.tsx` | Modify | Add crud prop, expandable rows, toolbar, delete button |
+| `packages/admin/src/components/__tests__/TableRenderer.test.tsx` | Create | Unit tests for TableRenderer (7 tests) |
 | `packages/admin/src/components/ViewRenderer.tsx` | Modify | Wire useCrud into tree view dispatch |
+| `packages/admin/src/types.ts` | Modify | Add `editable?: boolean` to ViewSpec |
+| `modules/base/views/res_groups.tree.ts` | Modify | Add `editable: true` |
+| `packages/admin/e2e/groups-crud.spec.ts` | Create | e2e test for group CRUD |
+| `packages/admin/package.json` | Modify | Add `@testing-library/react`, `jsdom` dev deps |
+| `packages/admin/vitest.config.ts` | Modify | Set `environment: 'jsdom'` |
 
 ## Testing
 
