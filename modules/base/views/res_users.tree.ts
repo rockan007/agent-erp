@@ -11,5 +11,4 @@ export const userTree: ViewSpec = {
     { name: 'email', label: 'Email', widget: 'text' },
     { name: 'active', label: 'Active', widget: 'text' },
   ],
-  editable: true,
 };
