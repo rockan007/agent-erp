@@ -12,4 +12,5 @@ export const partnerTree: ViewSpec = {
     { name: 'phone', label: 'Phone', widget: 'text' },
     { name: 'active', label: 'Active', widget: 'text' },
   ],
+  editable: true,
 };

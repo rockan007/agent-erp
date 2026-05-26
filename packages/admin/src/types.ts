@@ -41,6 +41,7 @@ export interface ViewSpec {
   title: string;
   fields: ViewField[];
   layout?: ViewLayout;
+  editable?: boolean;
 }
 
 export interface AppState {

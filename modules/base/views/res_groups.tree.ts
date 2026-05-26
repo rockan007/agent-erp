@@ -9,4 +9,5 @@ export const groupTree: ViewSpec = {
     { name: 'name', label: 'Name', widget: 'text' },
     { name: 'description', label: 'Description', widget: 'text' },
   ],
+  editable: true,
 };

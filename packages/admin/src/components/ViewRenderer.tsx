@@ -13,24 +13,27 @@ interface Props {
 
 const TreeCrudPage: React.FC<{ view: ViewSpec }> = ({ view }) => {
   const { records, loading, error, create, update, remove } = useCrud(view.model);
-  return (
-    <TableRenderer
-      view={view}
-      records={records}
-      loading={loading}
-      error={error}
-      crud={{
-        onSave: async (id, data) => {
+  const crud = view.editable
+    ? {
+        onSave: async (id: number | null, data: Record<string, unknown>) => {
           if (id != null) {
             await update(id, data);
           } else {
             await create(data);
           }
         },
-        onDelete: async (id) => {
+        onDelete: async (id: number) => {
           await remove(id);
         },
-      }}
+      }
+    : undefined;
+  return (
+    <TableRenderer
+      view={view}
+      records={records}
+      loading={loading}
+      error={error}
+      crud={crud}
     />
   );
 };
