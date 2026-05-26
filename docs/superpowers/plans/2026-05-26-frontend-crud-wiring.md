@@ -948,3 +948,22 @@ Expected: test passes, showing create → edit → delete flow works end-to-end
 git add packages/admin/e2e/groups-crud.spec.ts
 git commit -m "test: add e2e test for group CRUD flow"
 ```
+
+---
+
+## Implementation Deviations
+
+These changes were made during implementation based on user feedback and code review findings:
+
+### Task 1.5 (added): `ViewSpec.editable` flag
+
+- Added `editable?: boolean` to `ViewSpec` in `packages/admin/src/types.ts`
+- `TreeCrudPage` only passes `crud` prop when `view.editable === true`
+- `res.groups.tree.ts` set `editable: true` — only groups supports inline editing
+- `res.users.tree.ts` and `res.partner.tree.ts` — no editable flag (read-only lists, editing via forms)
+
+### Task 1: useCrud error handling & cleanup
+
+- `create`/`update`/`remove` now set `loading: true` during mutations and capture errors in `error` state
+- Added `mountedRef` cleanup pattern to prevent setState after unmount
+- Added mutation error tests (3 additional tests, total 10)
