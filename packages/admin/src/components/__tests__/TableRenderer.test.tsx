@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { TableRenderer } from '../TableRenderer';
 import type { ViewSpec } from '../../types';
 
@@ -124,5 +124,23 @@ describe('TableRenderer with crud', () => {
       />,
     );
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('should show expanded row when New is clicked', () => {
+    render(
+      <TableRenderer
+        view={treeView}
+        records={records}
+        loading={false}
+        error={null}
+        crud={{
+          onSave: vi.fn(),
+          onDelete: vi.fn(),
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByText('New Groups'));
+    expect(screen.getByText('Save')).toBeDefined();
+    expect(screen.getByText('Cancel')).toBeDefined();
   });
 });

@@ -61,6 +61,7 @@ interface ExpandedRowContentProps {
   view: ViewSpec;
   editingForm: ReturnType<typeof Form.useForm>[0];
   saving: boolean;
+  saveError: string | null;
   record: Record<string, unknown>;
   onSave: (record: Record<string, unknown>) => void;
   onCancel: (record: Record<string, unknown>) => void;
@@ -70,11 +71,20 @@ const ExpandedRowContent: React.FC<ExpandedRowContentProps> = ({
   view,
   editingForm,
   saving,
+  saveError,
   record,
   onSave,
   onCancel,
 }) => (
   <div className="p-4 bg-[#fafbfc] rounded-lg border border-[#e8ecf1]">
+    {saveError && (
+      <Alert
+        message={saveError}
+        type="error"
+        closable
+        className="mb-4"
+      />
+    )}
     <Form form={editingForm} layout="vertical">
       <Row gutter={[20, 4]}>
         {view.fields.map((f) => renderFieldItem(f))}
@@ -105,23 +115,29 @@ export const TableRenderer: React.FC<Props> = ({
   crud,
 }) => {
   const screens = useBreakpoint();
-  const [localRecords, setLocalRecords] = useState<Record<string, unknown>[]>([]);
+  const [localRecords] = useState<Record<string, unknown>[]>([]);
+  const [newRowKey, setNewRowKey] = useState<React.Key | null>(null);
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [editingForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const records = externalRecords ?? localRecords;
+  const baseRecords = externalRecords ?? localRecords;
+  const records = newRowKey != null
+    ? [{ id: newRowKey }, ...baseRecords]
+    : baseRecords;
   const hasCrud = crud != null;
 
   const handleNew = useCallback(() => {
-    const exists = records.some((r) => r.id === NEW_ROW_ID);
-    if (exists) {
-      setExpandedRowKeys([NEW_ROW_ID]);
+    if (newRowKey != null) {
+      setExpandedRowKeys([newRowKey]);
       return;
     }
-    setLocalRecords([{ id: NEW_ROW_ID }, ...records]);
-    setExpandedRowKeys([NEW_ROW_ID]);
-  }, [records]);
+    const key = NEW_ROW_ID;
+    setNewRowKey(key);
+    setSaveError(null);
+    setExpandedRowKeys([key]);
+  }, [newRowKey]);
 
   const handleExpand = useCallback(
     (expanded: boolean, record: Record<string, unknown>) => {
@@ -131,7 +147,7 @@ export const TableRenderer: React.FC<Props> = ({
       } else {
         setExpandedRowKeys([]);
         if (record.id === NEW_ROW_ID) {
-          setLocalRecords((prev) => prev.filter((r) => r.id !== NEW_ROW_ID));
+          setNewRowKey(null);
         }
       }
     },
@@ -143,15 +159,16 @@ export const TableRenderer: React.FC<Props> = ({
       try {
         const values = await editingForm.validateFields();
         setSaving(true);
+        setSaveError(null);
         const id = record.id === NEW_ROW_ID || record.id == null ? null : (record.id as number);
         await crud!.onSave(id, values as Record<string, unknown>);
         setExpandedRowKeys([]);
         if (record.id === NEW_ROW_ID) {
-          setLocalRecords((prev) => prev.filter((r) => r.id !== NEW_ROW_ID));
+          setNewRowKey(null);
         }
       } catch (err) {
         if (err && typeof err === 'object' && 'errorFields' in err) return;
-        // API error handled by parent via error prop
+        setSaveError(err instanceof Error ? err.message : 'Save failed');
       } finally {
         setSaving(false);
       }
@@ -162,8 +179,9 @@ export const TableRenderer: React.FC<Props> = ({
   const handleCancel = useCallback(
     (record: Record<string, unknown>) => {
       setExpandedRowKeys([]);
+      setSaveError(null);
       if (record.id === NEW_ROW_ID) {
-        setLocalRecords((prev) => prev.filter((r) => r.id !== NEW_ROW_ID));
+        setNewRowKey(null);
       }
     },
     [],
@@ -171,7 +189,11 @@ export const TableRenderer: React.FC<Props> = ({
 
   const handleDelete = useCallback(
     async (id: number) => {
-      await crud!.onDelete(id);
+      try {
+        await crud!.onDelete(id);
+      } catch (err) {
+        // Error surfaced via parent (useCrud hook sets error state, which comes back as error prop)
+      }
     },
     [crud],
   );
@@ -222,12 +244,13 @@ export const TableRenderer: React.FC<Props> = ({
         view={view}
         editingForm={editingForm}
         saving={saving}
+        saveError={saveError}
         record={record}
         onSave={handleSave}
         onCancel={handleCancel}
       />
     ),
-    [view, editingForm, saving, handleSave, handleCancel],
+    [view, editingForm, saving, saveError, handleSave, handleCancel],
   );
 
   const expandable = hasCrud
