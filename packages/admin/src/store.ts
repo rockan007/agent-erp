@@ -33,6 +33,7 @@ export const useStore = create<AppState>((set, get) => ({
   breadcrumbs: [],
   authView: 'login',
   viewsMap: {},
+  editRecordId: null,
 
   setMenuItems: (items) => {
     const { activeMenuId } = get();
@@ -95,6 +96,12 @@ export const useStore = create<AppState>((set, get) => ({
       activeView: view,
       breadcrumbs: computeBreadcrumbs(menuItems, id),
     });
+  },
+
+  navigateToView: (viewId, recordId) => {
+    const { viewsMap: vm } = get();
+    const view = vm[viewId] ?? null;
+    set({ activeView: view, editRecordId: recordId ?? null });
   },
 
   initializeAuth: () => {
