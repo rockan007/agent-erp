@@ -53,6 +53,8 @@ export interface AppState {
   siderCollapsed: boolean;
   breadcrumbs: BreadcrumbItem[];
   viewsMap: Record<string, ViewSpec>;
+  editRecordId: number | null;
+  navigateToView: (viewId: string, recordId?: number) => void;
 
   setMenuItems: (items: MenuItem[]) => void;
   setActiveMenu: (id: string) => void;
