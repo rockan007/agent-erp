@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useStore } from '../store';
 
 function deriveApiPath(model: string): string {
@@ -15,12 +15,20 @@ interface CrudState {
 export function useCrud(model: string) {
   const apiPath = deriveApiPath(model);
   const token = useStore((s) => s.token);
+  const mountedRef = useRef(true);
 
   const [state, setState] = useState<CrudState>({
     records: [],
     loading: true,
     error: null,
   });
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const authHeaders = useCallback((): Record<string, string> => {
     const headers: Record<string, string> = {};
@@ -36,8 +44,10 @@ export function useCrud(model: string) {
       const res = await fetch(apiPath, { headers: authHeaders() });
       if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
       const data = await res.json();
+      if (!mountedRef.current) return;
       setState({ records: data as Record<string, unknown>[], loading: false, error: null });
     } catch (err) {
+      if (!mountedRef.current) return;
       setState((s) => ({
         ...s,
         loading: false,
@@ -47,35 +57,65 @@ export function useCrud(model: string) {
   }, [apiPath, authHeaders]);
 
   const create = useCallback(async (data: Record<string, unknown>) => {
-    setState((s) => ({ ...s, error: null }));
-    const res = await fetch(apiPath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`Create failed: ${res.status}`);
-    await fetchAll();
+    setState((s) => ({ ...s, error: null, loading: true }));
+    try {
+      const res = await fetch(apiPath, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`Create failed: ${res.status}`);
+      await fetchAll();
+    } catch (err) {
+      if (!mountedRef.current) return;
+      setState((s) => ({
+        ...s,
+        loading: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      }));
+      throw err;
+    }
   }, [apiPath, authHeaders, fetchAll]);
 
   const update = useCallback(async (id: number, data: Record<string, unknown>) => {
-    setState((s) => ({ ...s, error: null }));
-    const res = await fetch(`${apiPath}/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`Update failed: ${res.status}`);
-    await fetchAll();
+    setState((s) => ({ ...s, error: null, loading: true }));
+    try {
+      const res = await fetch(`${apiPath}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`Update failed: ${res.status}`);
+      await fetchAll();
+    } catch (err) {
+      if (!mountedRef.current) return;
+      setState((s) => ({
+        ...s,
+        loading: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      }));
+      throw err;
+    }
   }, [apiPath, authHeaders, fetchAll]);
 
   const remove = useCallback(async (id: number) => {
-    setState((s) => ({ ...s, error: null }));
-    const res = await fetch(`${apiPath}/${id}`, {
-      method: 'DELETE',
-      headers: authHeaders(),
-    });
-    if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-    await fetchAll();
+    setState((s) => ({ ...s, error: null, loading: true }));
+    try {
+      const res = await fetch(`${apiPath}/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+      await fetchAll();
+    } catch (err) {
+      if (!mountedRef.current) return;
+      setState((s) => ({
+        ...s,
+        loading: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      }));
+      throw err;
+    }
   }, [apiPath, authHeaders, fetchAll]);
 
   useEffect(() => {

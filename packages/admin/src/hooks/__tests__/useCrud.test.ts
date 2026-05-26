@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCrud } from '../useCrud';
 
 // Mock zustand store
@@ -87,6 +87,31 @@ describe('useCrud', () => {
       });
       expect(result.current.records).toEqual([created]);
     });
+
+    it('should set error on create failure', async () => {
+      globalThis.fetch = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({}),
+        });
+
+      const { result } = renderHook(() => useCrud('res.groups'));
+
+      // Wait for initial mount fetch to complete
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        try { await result.current.create({ name: '' }); } catch { /* expected error */ }
+      });
+
+      expect(result.current.error).toBe('Create failed: 400');
+      expect(result.current.loading).toBe(false);
+    });
   });
 
   describe('update', () => {
@@ -123,6 +148,31 @@ describe('useCrud', () => {
       });
       expect(result.current.records).toEqual(updatedList);
     });
+
+    it('should set error on update failure', async () => {
+      globalThis.fetch = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          json: () => Promise.resolve({}),
+        });
+
+      const { result } = renderHook(() => useCrud('res.groups'));
+
+      // Wait for initial mount fetch to complete
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        try { await result.current.update(1, { name: '' }); } catch { /* expected error */ }
+      });
+
+      expect(result.current.error).toBe('Update failed: 500');
+      expect(result.current.loading).toBe(false);
+    });
   });
 
   describe('remove', () => {
@@ -154,6 +204,31 @@ describe('useCrud', () => {
         headers: { Authorization: 'Bearer test-token' },
       });
       expect(result.current.records).toEqual(remaining);
+    });
+
+    it('should set error on remove failure', async () => {
+      globalThis.fetch = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 403,
+          json: () => Promise.resolve({}),
+        });
+
+      const { result } = renderHook(() => useCrud('res.groups'));
+
+      // Wait for initial mount fetch to complete
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        try { await result.current.remove(1); } catch { /* expected error */ }
+      });
+
+      expect(result.current.error).toBe('Delete failed: 403');
+      expect(result.current.loading).toBe(false);
     });
   });
 
