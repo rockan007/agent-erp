@@ -2,6 +2,7 @@ import React from 'react';
 import { Result } from 'antd';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ViewSpec } from '../store';
+import { useCrud } from '../hooks/useCrud';
 import { FormRenderer } from './FormRenderer';
 import { TableRenderer } from './TableRenderer';
 import { SearchPanel } from './SearchPanel';
@@ -10,12 +11,36 @@ interface Props {
   view: ViewSpec;
 }
 
+const TreeCrudPage: React.FC<{ view: ViewSpec }> = ({ view }) => {
+  const { records, loading, error, create, update, remove } = useCrud(view.model);
+  return (
+    <TableRenderer
+      view={view}
+      records={records}
+      loading={loading}
+      error={error}
+      crud={{
+        onSave: async (id, data) => {
+          if (id != null) {
+            await update(id, data);
+          } else {
+            await create(data);
+          }
+        },
+        onDelete: async (id) => {
+          await remove(id);
+        },
+      }}
+    />
+  );
+};
+
 function renderView(view: ViewSpec): React.ReactNode {
   switch (view.type) {
     case 'form':
       return <FormRenderer view={view} />;
     case 'tree':
-      return <TableRenderer view={view} />;
+      return <TreeCrudPage view={view} />;
     case 'search':
       return <SearchPanel view={view} />;
     case 'kanban':
