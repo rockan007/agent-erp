@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Table, Grid, Button, Popconfirm, Form, Alert, Space, Row, Col } from 'antd';
 import { PlusOutlined, DeleteOutlined, InboxOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -131,7 +131,19 @@ export const TableRenderer: React.FC<Props> = ({
     ? [{ id: newRowKey }, ...baseRecords]
     : baseRecords;
   const hasCrud = crud != null;
-  const hasNav = onNewClick != null || onRowClick != null;
+  const onRowClickRef = useRef(onRowClick);
+  onRowClickRef.current = onRowClick;
+  const onRow = useCallback(
+    (record: Record<string, unknown>) => {
+      const handler = onRowClickRef.current;
+      if (!handler) return {};
+      return {
+        onClick: () => handler(record),
+        style: { cursor: 'pointer' } as React.CSSProperties,
+      };
+    },
+    [],
+  );
 
   const handleNew = useCallback(() => {
     if (newRowKey != null) {
@@ -276,7 +288,7 @@ export const TableRenderer: React.FC<Props> = ({
           className="mb-4"
         />
       )}
-      {(hasCrud || hasNav) && (
+      {(hasCrud || onNewClick) && (
         <div className="mb-3">
           {hasCrud && (
             <Button type="primary" icon={<PlusOutlined />} onClick={handleNew}>
@@ -308,10 +320,7 @@ export const TableRenderer: React.FC<Props> = ({
         scroll={!screens.md ? { x: 'max-content' } : undefined}
         pagination={false}
         expandable={expandable}
-        onRow={onRowClick ? (record) => ({
-          onClick: () => onRowClick(record),
-          style: { cursor: 'pointer' },
-        }) : undefined}
+        onRow={onRow}
       />
     </div>
   );
