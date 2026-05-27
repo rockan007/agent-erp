@@ -2,11 +2,11 @@ import { envWithContext } from '@erp/domain';
 
 export class PartnerController {
   static routes = [
-    { path: '/api/partners', method: 'GET' as const, handler: 'list' },
-    { path: '/api/partners/:id', method: 'GET' as const, handler: 'detail' },
-    { path: '/api/partners', method: 'POST' as const, handler: 'create' },
-    { path: '/api/partners/:id', method: 'PUT' as const, handler: 'update' },
-    { path: '/api/partners/:id', method: 'DELETE' as const, handler: 'delete' },
+    { path: '/api/partner', method: 'GET' as const, handler: 'list' },
+    { path: '/api/partner/:id', method: 'GET' as const, handler: 'detail' },
+    { path: '/api/partner', method: 'POST' as const, handler: 'create' },
+    { path: '/api/partner/:id', method: 'PUT' as const, handler: 'update' },
+    { path: '/api/partner/:id', method: 'DELETE' as const, handler: 'delete' },
   ];
 
   async list(ctx: { uid: number }) {

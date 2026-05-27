@@ -16,7 +16,7 @@ export function computeBreadcrumbs(
     const id: string = currentId;
     const item: MenuItem | undefined = menuItems.find((m) => m.id === id);
     if (!item) break;
-    breadcrumbs.unshift({ id: item.id, name: item.name });
+    breadcrumbs.unshift({ id: item.id, name: item.name, menuId: item.id });
     currentId = item.parentId;
   }
 
@@ -34,6 +34,7 @@ export const useStore = create<AppState>((set, get) => ({
   authView: 'login',
   viewsMap: {},
   editRecordId: null,
+  previousViewId: null,
 
   setMenuItems: (items) => {
     const { activeMenuId } = get();
@@ -80,6 +81,7 @@ export const useStore = create<AppState>((set, get) => ({
         viewsMap: data.views,
         activeView,
         editRecordId: null,
+        previousViewId: null,
         breadcrumbs: computeBreadcrumbs(data.menus as MenuItem[], activeMenuId),
       });
     } catch {
@@ -96,14 +98,29 @@ export const useStore = create<AppState>((set, get) => ({
       activeMenuId: id,
       activeView: view,
       editRecordId: null,
+      previousViewId: null,
       breadcrumbs: computeBreadcrumbs(menuItems, id),
     });
   },
 
   navigateToView: (viewId, recordId) => {
-    const { viewsMap: vm } = get();
+    const { viewsMap: vm, menuItems, activeMenuId, activeView } = get();
     const view = vm[viewId] ?? null;
-    set({ activeView: view, editRecordId: recordId ?? null });
+
+    const previousViewId = activeView?.id ?? null;
+
+    const menuBreadcrumbs = computeBreadcrumbs(menuItems, activeMenuId);
+
+    // If navigating to the active menu's default view, don't append a duplicate crumb
+    const activeMenu = activeMenuId ? menuItems.find((m) => m.id === activeMenuId) : undefined;
+    const isMenuDefaultView = activeMenu?.action === viewId;
+
+    let breadcrumbs = menuBreadcrumbs;
+    if (!isMenuDefaultView && view) {
+      breadcrumbs = [...menuBreadcrumbs, { id: view.id, name: view.title, viewId: view.id }];
+    }
+
+    set({ activeView: view, editRecordId: recordId ?? null, previousViewId, breadcrumbs });
   },
 
   initializeAuth: () => {
@@ -142,7 +159,7 @@ export const useStore = create<AppState>((set, get) => ({
     localStorage.removeItem('erp_token');
     localStorage.removeItem('erp_user');
     localStorage.removeItem('erp_activeMenuId');
-    set({ token: null, user: null, activeView: null, activeMenuId: null, editRecordId: null, menuItems: [], viewsMap: {} });
+    set({ token: null, user: null, activeView: null, activeMenuId: null, editRecordId: null, previousViewId: null, menuItems: [], viewsMap: {} });
   },
 
   register: async (data) => {

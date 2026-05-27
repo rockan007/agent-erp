@@ -15,13 +15,14 @@ function isTupleArray(v: unknown): v is [string, string][] {
   );
 }
 
-export const SelectWidget: React.FC<Props> = ({ field, value, onChange }) => {
+export const SelectWidget: React.FC<Props & { id?: string }> = ({ field, value, onChange, id }) => {
   const raw = field.options?.choices;
   const choices: [string, string][] = isTupleArray(raw) ? raw : [];
   const options = choices.map(([val, label]) => ({ value: val, label }));
 
   return (
     <Select
+      id={id}
       value={value || undefined}
       options={options}
       onChange={(v) => onChange?.(v)}

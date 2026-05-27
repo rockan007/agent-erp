@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Button, Tabs, Card, Row, Col, Spin, Alert, message } from 'antd';
-import { SaveOutlined } from '@ant-design/icons';
-import { ViewSpec, ViewField } from '../store';
+import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { ViewSpec, ViewField, useStore } from '../store';
 import { useCrud } from '../hooks/useCrud';
 import { TextWidget } from './widgets/TextWidget';
 import { SelectWidget } from './widgets/SelectWidget';
@@ -65,6 +65,8 @@ function renderFlatFields(fields: ViewField[]) {
 export const FormRenderer: React.FC<Props> = ({ view, recordId }) => {
   const [form] = Form.useForm();
   const { create, update, fetchOne } = useCrud(view.model);
+  const navigateToView = useStore((s) => s.navigateToView);
+  const previousViewId = useStore((s) => s.previousViewId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -161,6 +163,16 @@ export const FormRenderer: React.FC<Props> = ({ view, recordId }) => {
 
   return (
     <div className="max-w-3xl mx-auto">
+      {previousViewId && (
+        <div className="mb-3">
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigateToView(previousViewId)}
+          >
+            Back
+          </Button>
+        </div>
+      )}
       {error && (
         <Alert message={error} type="error" closable className="mb-4" />
       )}

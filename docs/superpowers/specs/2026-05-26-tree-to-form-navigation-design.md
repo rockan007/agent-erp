@@ -84,7 +84,7 @@ interface Props {
 }
 ```
 
-- `onNewClick` → 显示 "New <Title>" 按钮
+- `onNewClick` → 显示 "New \<Title\>" 按钮
 - `onRowClick` → 行变可点击，antd Table `onRow` 返回 `{ onClick: () => onRowClick(record) }`
 
 与 `crud` 互斥：`crud` 优先（editable 模式），`onNewClick`/`onRowClick` 是非 editable 模式。

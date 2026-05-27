@@ -294,6 +294,21 @@ describe('useCrud', () => {
       expect(globalThis.fetch).toHaveBeenCalledWith('/api/groups', expect.anything());
     });
 
+    it('should derive /api/partner from res.partner', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+
+      const { result } = renderHook(() => useCrud('res.partner'));
+
+      await act(async () => {
+        await result.current.fetchAll();
+      });
+
+      expect(globalThis.fetch).toHaveBeenCalledWith('/api/partner', expect.anything());
+    });
+
     it('should derive /api/users from res.users', async () => {
       globalThis.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,

@@ -12,6 +12,8 @@ export interface MenuItem {
 export interface BreadcrumbItem {
   id: string;
   name: string;
+  menuId?: string;
+  viewId?: string;
 }
 
 export interface ViewField {
@@ -54,6 +56,7 @@ export interface AppState {
   breadcrumbs: BreadcrumbItem[];
   viewsMap: Record<string, ViewSpec>;
   editRecordId: number | null;
+  previousViewId: string | null;
   navigateToView: (viewId: string, recordId?: number) => void;
 
   setMenuItems: (items: MenuItem[]) => void;
