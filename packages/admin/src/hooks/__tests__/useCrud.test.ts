@@ -234,10 +234,11 @@ describe('useCrud', () => {
 
   describe('fetchOne', () => {
     it('fetches a single record by id', async () => {
-      (global.fetch as ReturnType<typeof vi.fn>)
+      globalThis.fetch = vi
+        .fn()
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve([]),
+          json: async () => [],
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -245,22 +246,22 @@ describe('useCrud', () => {
         });
 
       const { result } = renderHook(() => useCrud('res.test'));
-      let data: unknown;
       await act(async () => {
-        data = await result.current.fetchOne(1);
+        const data = await result.current.fetchOne(1);
+        expect(data).toEqual({ id: 1, name: 'Test' });
       });
 
-      expect(data).toEqual({ id: 1, name: 'Test' });
-      expect(global.fetch).toHaveBeenCalledWith('/api/test/1', {
+      expect(globalThis.fetch).toHaveBeenCalledWith('/api/test/1', {
         headers: { Authorization: 'Bearer test-token' },
       });
     });
 
     it('returns null for 404', async () => {
-      (global.fetch as ReturnType<typeof vi.fn>)
+      globalThis.fetch = vi
+        .fn()
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve([]),
+          json: async () => [],
         })
         .mockResolvedValueOnce({
           ok: false,
