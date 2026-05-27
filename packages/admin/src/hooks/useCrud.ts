@@ -120,7 +120,8 @@ export function useCrud(model: string) {
 
   const fetchOne = useCallback(async (id: number): Promise<Record<string, unknown> | null> => {
     const res = await fetch(`${apiPath}/${id}`, { headers: authHeaders() });
-    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Fetch record ${id} failed: ${res.status}`);
     return res.json() as Promise<Record<string, unknown>>;
   }, [apiPath, authHeaders]);
 

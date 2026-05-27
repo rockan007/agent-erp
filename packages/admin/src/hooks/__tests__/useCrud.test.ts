@@ -232,6 +232,51 @@ describe('useCrud', () => {
     });
   });
 
+  describe('fetchOne', () => {
+    it('fetches a single record by id', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ id: 1, name: 'Test' }),
+        });
+
+      const { result } = renderHook(() => useCrud('res.test'));
+      let data: unknown;
+      await act(async () => {
+        data = await result.current.fetchOne(1);
+      });
+
+      expect(data).toEqual({ id: 1, name: 'Test' });
+      expect(global.fetch).toHaveBeenCalledWith('/api/test/1', {
+        headers: { Authorization: 'Bearer test-token' },
+      });
+    });
+
+    it('returns null for 404', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve([]),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+        });
+
+      const { result } = renderHook(() => useCrud('res.test'));
+      let data: unknown;
+      await act(async () => {
+        data = await result.current.fetchOne(1);
+      });
+
+      expect(data).toBeNull();
+    });
+  });
+
   describe('apiPath derivation', () => {
     it('should derive /api/groups from res.groups', async () => {
       globalThis.fetch = vi.fn().mockResolvedValueOnce({
