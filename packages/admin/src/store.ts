@@ -79,6 +79,7 @@ export const useStore = create<AppState>((set, get) => ({
         menuItems: data.menus,
         viewsMap: data.views,
         activeView,
+        editRecordId: null,
         breadcrumbs: computeBreadcrumbs(data.menus as MenuItem[], activeMenuId),
       });
     } catch {
@@ -94,6 +95,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({
       activeMenuId: id,
       activeView: view,
+      editRecordId: null,
       breadcrumbs: computeBreadcrumbs(menuItems, id),
     });
   },
@@ -140,7 +142,7 @@ export const useStore = create<AppState>((set, get) => ({
     localStorage.removeItem('erp_token');
     localStorage.removeItem('erp_user');
     localStorage.removeItem('erp_activeMenuId');
-    set({ token: null, user: null, activeView: null, activeMenuId: null, menuItems: [], viewsMap: {} });
+    set({ token: null, user: null, activeView: null, activeMenuId: null, editRecordId: null, menuItems: [], viewsMap: {} });
   },
 
   register: async (data) => {
