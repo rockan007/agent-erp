@@ -198,7 +198,7 @@ function erpPlugin() {
             }
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ menus: filteredMenus, views: filteredViews }));
+            res.end(JSON.stringify({ menus: filteredMenus, views: viewsMap }));
           } catch (err) {
             console.error('[erp] /api/menus error:', err);
             res.writeHead(500, { 'Content-Type': 'application/json' });
