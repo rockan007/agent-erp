@@ -69,20 +69,24 @@ export const FormRenderer: React.FC<Props> = ({ view, recordId }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let ignore = false;
     if (recordId != null) {
       setLoading(true);
       setError(null);
       fetchOne(recordId)
         .then((data) => {
-          if (data) form.setFieldsValue(data);
+          if (!ignore && data) form.setFieldsValue(data);
         })
         .catch((err) => {
-          setError(err instanceof Error ? err.message : 'Failed to load record');
+          if (!ignore) setError(err instanceof Error ? err.message : 'Failed to load record');
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          if (!ignore) setLoading(false);
+        });
     } else {
       form.resetFields();
     }
+    return () => { ignore = true; };
   }, [recordId, form, fetchOne]);
 
   const handleSave = async (values: Record<string, unknown>) => {
