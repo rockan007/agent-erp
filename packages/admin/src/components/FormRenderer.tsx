@@ -1,12 +1,14 @@
-import React from 'react';
-import { Form, Button, Tabs, Card, Row, Col } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Form, Button, Tabs, Card, Row, Col, Spin, Alert } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
 import { ViewSpec, ViewField } from '../store';
+import { useCrud } from '../hooks/useCrud';
 import { TextWidget } from './widgets/TextWidget';
 import { SelectWidget } from './widgets/SelectWidget';
 
 interface Props {
   view: ViewSpec;
+  recordId?: number | null;
 }
 
 function renderWidget(field: ViewField) {
@@ -60,11 +62,40 @@ function renderFlatFields(fields: ViewField[]) {
   );
 }
 
-export const FormRenderer: React.FC<Props> = ({ view }) => {
+export const FormRenderer: React.FC<Props> = ({ view, recordId }) => {
   const [form] = Form.useForm();
+  const { create, update, fetchOne } = useCrud(view.model);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSave = (values: Record<string, unknown>) => {
-    console.log('Save:', view.model, values);
+  useEffect(() => {
+    if (recordId != null) {
+      setLoading(true);
+      setError(null);
+      fetchOne(recordId)
+        .then((data) => {
+          if (data) form.setFieldsValue(data);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Failed to load record');
+        })
+        .finally(() => setLoading(false));
+    } else {
+      form.resetFields();
+    }
+  }, [recordId, form, fetchOne]);
+
+  const handleSave = async (values: Record<string, unknown>) => {
+    try {
+      setError(null);
+      if (recordId != null) {
+        await update(recordId, values);
+      } else {
+        await create(values);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed');
+    }
   };
 
   const renderContent = () => {
@@ -111,8 +142,19 @@ export const FormRenderer: React.FC<Props> = ({ view }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto flex justify-center py-12">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
+      {error && (
+        <Alert message={error} type="error" closable className="mb-4" />
+      )}
       <div className="erp-form-card">
         <Form form={form} layout="vertical" onFinish={handleSave}>
           {renderContent()}
