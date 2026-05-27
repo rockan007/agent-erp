@@ -19,6 +19,8 @@ interface Props {
   loading?: boolean;
   error?: string | null;
   crud?: CrudActions;
+  onNewClick?: () => void;
+  onRowClick?: (record: Record<string, unknown>) => void;
 }
 
 function formatCell(val: unknown): string {
@@ -113,6 +115,8 @@ export const TableRenderer: React.FC<Props> = ({
   loading,
   error,
   crud,
+  onNewClick,
+  onRowClick,
 }) => {
   const screens = useBreakpoint();
   const [localRecords] = useState<Record<string, unknown>[]>([]);
@@ -127,6 +131,7 @@ export const TableRenderer: React.FC<Props> = ({
     ? [{ id: newRowKey }, ...baseRecords]
     : baseRecords;
   const hasCrud = crud != null;
+  const hasNav = onNewClick != null || onRowClick != null;
 
   const handleNew = useCallback(() => {
     if (newRowKey != null) {
@@ -271,11 +276,18 @@ export const TableRenderer: React.FC<Props> = ({
           className="mb-4"
         />
       )}
-      {hasCrud && (
+      {(hasCrud || hasNav) && (
         <div className="mb-3">
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleNew}>
-            New {view.title}
-          </Button>
+          {hasCrud && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleNew}>
+              New {view.title}
+            </Button>
+          )}
+          {!hasCrud && onNewClick && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={onNewClick}>
+              New {view.title}
+            </Button>
+          )}
         </div>
       )}
       <Table
@@ -296,6 +308,10 @@ export const TableRenderer: React.FC<Props> = ({
         scroll={!screens.md ? { x: 'max-content' } : undefined}
         pagination={false}
         expandable={expandable}
+        onRow={onRowClick ? (record) => ({
+          onClick: () => onRowClick(record),
+          style: { cursor: 'pointer' },
+        }) : undefined}
       />
     </div>
   );
