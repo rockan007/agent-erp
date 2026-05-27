@@ -118,6 +118,12 @@ export function useCrud(model: string) {
     }
   }, [apiPath, authHeaders, fetchAll]);
 
+  const fetchOne = useCallback(async (id: number): Promise<Record<string, unknown> | null> => {
+    const res = await fetch(`${apiPath}/${id}`, { headers: authHeaders() });
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    return res.json() as Promise<Record<string, unknown>>;
+  }, [apiPath, authHeaders]);
+
   useEffect(() => {
     if (token) {
       fetchAll();
@@ -132,5 +138,6 @@ export function useCrud(model: string) {
     create,
     update,
     remove,
+    fetchOne,
   };
 }
