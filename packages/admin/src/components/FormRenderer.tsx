@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Button, Tabs, Card, Row, Col, Spin, Alert } from 'antd';
+import { Form, Button, Tabs, Card, Row, Col, Spin, Alert, message } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
 import { ViewSpec, ViewField } from '../store';
 import { useCrud } from '../hooks/useCrud';
@@ -67,6 +67,7 @@ export const FormRenderer: React.FC<Props> = ({ view, recordId }) => {
   const { create, update, fetchOne } = useCrud(view.model);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -92,13 +93,17 @@ export const FormRenderer: React.FC<Props> = ({ view, recordId }) => {
   const handleSave = async (values: Record<string, unknown>) => {
     try {
       setError(null);
+      setSaving(true);
       if (recordId != null) {
         await update(recordId, values);
       } else {
         await create(values);
       }
+      message.success(recordId != null ? 'Record updated' : 'Record created');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -163,7 +168,7 @@ export const FormRenderer: React.FC<Props> = ({ view, recordId }) => {
         <Form form={form} layout="vertical" onFinish={handleSave}>
           {renderContent()}
           <div className="mt-6 pt-5 border-t border-[#e8ecf1]">
-            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="middle">
+            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="middle" loading={saving}>
               Save
             </Button>
           </div>
