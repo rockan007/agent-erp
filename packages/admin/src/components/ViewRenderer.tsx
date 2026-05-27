@@ -1,7 +1,7 @@
 import React from 'react';
 import { Result } from 'antd';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ViewSpec } from '../store';
+import { ViewSpec, useStore } from '../store';
 import { useCrud } from '../hooks/useCrud';
 import { FormRenderer } from './FormRenderer';
 import { TableRenderer } from './TableRenderer';
@@ -13,35 +13,50 @@ interface Props {
 
 const TreeCrudPage: React.FC<{ view: ViewSpec }> = ({ view }) => {
   const { records, loading, error, create, update, remove } = useCrud(view.model);
-  const crud = view.editable
-    ? {
-        onSave: async (id: number | null, data: Record<string, unknown>) => {
-          if (id != null) {
-            await update(id, data);
-          } else {
-            await create(data);
-          }
-        },
-        onDelete: async (id: number) => {
-          await remove(id);
-        },
-      }
-    : undefined;
+  const navigateToView = useStore((s) => s.navigateToView);
+
+  if (view.editable) {
+    return (
+      <TableRenderer
+        view={view}
+        records={records}
+        loading={loading}
+        error={error}
+        crud={{
+          onSave: async (id, data) => {
+            if (id != null) {
+              await update(id, data);
+            } else {
+              await create(data);
+            }
+          },
+          onDelete: async (id) => {
+            await remove(id);
+          },
+        }}
+      />
+    );
+  }
+
+  const formViewId = `${view.model}.form`;
   return (
     <TableRenderer
       view={view}
       records={records}
       loading={loading}
       error={error}
-      crud={crud}
+      onNewClick={() => navigateToView(formViewId)}
+      onRowClick={(record) => navigateToView(formViewId, record.id as number)}
     />
   );
 };
 
 function renderView(view: ViewSpec): React.ReactNode {
   switch (view.type) {
-    case 'form':
-      return <FormRenderer view={view} />;
+    case 'form': {
+      const {editRecordId} = useStore.getState();
+      return <FormRenderer view={view} recordId={editRecordId} />;
+    }
     case 'tree':
       return <TreeCrudPage view={view} />;
     case 'search':
